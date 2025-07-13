@@ -1,16 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Modal, Switch } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import * as NavigationBar from 'expo-navigation-bar';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Settings, CreditCard as Edit3, MapPin, Clock, Zap, Trophy, Users, Calendar } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/Button';
-import { Colors } from '@/constants/Colors';
 import { Spacing, BorderRadius } from '@/constants/Spacing';
 import { locationUtils } from '@/utils/locationUtils';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const [settingsVisible, setSettingsVisible] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -22,25 +26,25 @@ export default function ProfileScreen() {
       icon: MapPin, 
       label: 'Total Distance', 
       value: locationUtils.formatDistance((user?.totalDistance || 0) * 1000),
-      color: Colors.primary[500] 
+      color: theme.colors.primary[500]
     },
     { 
       icon: Clock, 
       label: 'Total Time', 
       value: locationUtils.formatDuration(user?.totalDuration || 0),
-      color: Colors.secondary[500] 
+      color: theme.colors.secondary[500]
     },
     { 
       icon: Zap, 
       label: 'Activities', 
       value: user?.totalActivities?.toString() || '0',
-      color: Colors.accent[500] 
+      color: theme.colors.accent[500]
     },
     { 
       icon: Trophy, 
       label: 'PRs This Year', 
       value: '8',
-      color: Colors.warning[500] 
+      color: theme.colors.warning[500]
     },
   ];
 
@@ -52,10 +56,10 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: theme.colors.card }]}> 
           <View style={styles.profileInfo}>
             <Image 
               source={{ 
@@ -64,32 +68,32 @@ export default function ProfileScreen() {
               style={styles.avatar} 
             />
             <View style={styles.userDetails}>
-              <Text style={styles.username}>{user?.username || 'Athlete'}</Text>
-              <Text style={styles.email}>{user?.email || ''}</Text>
+              <Text style={[styles.username, { color: theme.colors.text }]}>{user?.username || 'Athlete'}</Text>
+              <Text style={[styles.email, { color: theme.colors.text }]}>{user?.email || ''}</Text>
               <View style={styles.followStats}>
-                <Text style={styles.followText}>
-                  <Text style={styles.followNumber}>{user?.followers?.length || 0}</Text> followers
+                <Text style={[styles.followText, { color: theme.colors.text }]}>
+                  <Text style={[styles.followNumber, { color: theme.colors.text }]}>{user?.followers?.length || 0}</Text> followers
                 </Text>
-                <Text style={styles.followText}>
-                  <Text style={styles.followNumber}>{user?.following?.length || 0}</Text> following
+                <Text style={[styles.followText, { color: theme.colors.text }]}>
+                  <Text style={[styles.followNumber, { color: theme.colors.text }]}>{user?.following?.length || 0}</Text> following
                 </Text>
               </View>
             </View>
           </View>
-          <TouchableOpacity style={styles.settingsButton}>
-            <Settings size={24} color={Colors.text.secondary} />
+          <TouchableOpacity style={styles.settingsButton} onPress={() => setSettingsVisible(true)}>
+            <Settings size={24} color={theme.colors.text} />
           </TouchableOpacity>
         </View>
 
         {/* Stats */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Stats</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Your Stats</Text>
           <View style={styles.statsGrid}>
             {stats.map((stat, index) => (
-              <View key={index} style={styles.statCard}>
+              <View key={index} style={[styles.statCard, { backgroundColor: theme.colors.card }]}> 
                 <stat.icon size={20} color={stat.color} />
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
+                <Text style={[styles.statValue, { color: theme.colors.text }]}>{stat.value}</Text>
+                <Text style={[styles.statLabel, { color: theme.colors.text }]}>{stat.label}</Text>
               </View>
             ))}
           </View>
@@ -98,66 +102,75 @@ export default function ProfileScreen() {
         {/* Recent Activities */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Activities</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Recent Activities</Text>
             <TouchableOpacity>
-              <Text style={styles.seeAll}>See All</Text>
+              <Text style={[styles.seeAll, { color: theme.colors.primary[500] }]}>See All</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.activitiesContainer}>
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <MapPin size={16} color={Colors.primary[500]} />
+            <View style={[styles.activityItem, { backgroundColor: theme.colors.card }]}> 
+              <View style={[styles.activityIcon, { backgroundColor: theme.colors.background }]}> 
+                <MapPin size={16} color={theme.colors.primary[500]} />
               </View>
               <View style={styles.activityInfo}>
-                <Text style={styles.activityTitle}>Morning Run</Text>
-                <Text style={styles.activityDetails}>5.2km • 28:34 • Yesterday</Text>
+                <Text style={[styles.activityTitle, { color: theme.colors.text }]}>Morning Run</Text>
+                <Text style={[styles.activityDetails, { color: theme.colors.text }]}>
+                  5.2km • 28:34 • Yesterday
+                </Text>
               </View>
-              <Text style={styles.activityPace}>5:29/km</Text>
+              <Text style={[styles.activityPace, { color: theme.colors.primary[500] }]}>5:29/km</Text>
             </View>
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Zap size={16} color={Colors.secondary[500]} />
+            <View style={[styles.activityItem, { backgroundColor: theme.colors.card }]}> 
+              <View style={[styles.activityIcon, { backgroundColor: theme.colors.background }]}> 
+                <Zap size={16} color={theme.colors.secondary[500]} />
               </View>
               <View style={styles.activityInfo}>
-                <Text style={styles.activityTitle}>Evening Cycle</Text>
-                <Text style={styles.activityDetails}>15.8km • 45:12 • 2 days ago</Text>
+                <Text style={[styles.activityTitle, { color: theme.colors.text }]}>Evening Cycle</Text>
+                <Text style={[styles.activityDetails, { color: theme.colors.text }]}>
+                  15.8km • 45:12 • 2 days ago
+                </Text>
               </View>
-              <Text style={styles.activityPace}>21.2 km/h</Text>
+              <Text style={[styles.activityPace, { color: theme.colors.secondary[500] }]}>21.2 km/h</Text>
             </View>
-            <View style={styles.activityItem}>
-              <View style={styles.activityIcon}>
-                <Calendar size={16} color={Colors.accent[500]} />
+            <View style={[styles.activityItem, { backgroundColor: theme.colors.card }]}> 
+              <View style={[styles.activityIcon, { backgroundColor: theme.colors.background }]}> 
+                <Calendar size={16} color={theme.colors.accent[500]} />
               </View>
               <View style={styles.activityInfo}>
-                <Text style={styles.activityTitle}>Weekend Hike</Text>
-                <Text style={styles.activityDetails}>8.1km • 2:15:30 • 3 days ago</Text>
+                <Text style={[styles.activityTitle, { color: theme.colors.text }]}>Weekend Hike</Text>
+                <Text style={[styles.activityDetails, { color: theme.colors.text }]}>
+                  8.1km • 2:15:30 • 3 days ago
+                </Text>
               </View>
-              <Text style={styles.activityPace}>16:41/km</Text>
+              <Text style={[styles.activityPace, { color: theme.colors.accent[500] }]}>16:41/km</Text>
             </View>
           </View>
         </View>
 
         {/* Achievements */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Achievements</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Achievements</Text>
           <View style={styles.achievementsGrid}>
             {achievements.map((achievement, index) => (
               <View 
                 key={index} 
                 style={[
                   styles.achievementCard,
+                  { backgroundColor: theme.colors.card },
                   !achievement.earned && styles.achievementCardLocked
                 ]}
               >
                 <Text style={styles.achievementIcon}>{achievement.icon}</Text>
                 <Text style={[
                   styles.achievementTitle,
+                  { color: theme.colors.text },
                   !achievement.earned && styles.achievementTitleLocked
                 ]}>
                   {achievement.title}
                 </Text>
                 <Text style={[
                   styles.achievementDescription,
+                  { color: theme.colors.text },
                   !achievement.earned && styles.achievementDescriptionLocked
                 ]}>
                   {achievement.description}
@@ -179,11 +192,34 @@ export default function ProfileScreen() {
             title="Sign Out"
             onPress={handleLogout}
             variant="outline"
-            style={[styles.actionButton, styles.logoutButton]}
-            textStyle={styles.logoutButtonText}
+            style={styles.actionButton}
+            textStyle={{ color: theme.colors.error[500] }}
           />
         </View>
       </ScrollView>
+      <Modal
+        visible={settingsVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSettingsVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.modalBackdrop }}>
+          <View style={{ backgroundColor: theme.colors.modal, padding: 32, borderRadius: 24, alignItems: 'center', width: 320, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 16, elevation: 8 }}>
+            <Text style={{ fontSize: 20, fontWeight: 'bold', color: theme.colors.text, marginBottom: 16 }}>Theme</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
+              <Text style={{ marginRight: 8, color: theme.colors.text }}>Light</Text>
+              <Switch
+                value={theme.mode === 'dark'}
+                onValueChange={toggleTheme}
+                thumbColor={theme.mode === 'dark' ? theme.colors.primary[500] : theme.colors.neutral[400]}
+                trackColor={{ false: theme.colors.neutral[300], true: theme.colors.primary[300] }}
+              />
+              <Text style={{ marginLeft: 8, color: theme.colors.text }}>Dark</Text>
+            </View>
+            <Button title="Close" onPress={() => setSettingsVisible(false)} style={{ marginTop: 8, width: 120 }} />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -191,20 +227,16 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   content: {
     flex: 1,
   },
-  
-  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
   },
   profileInfo: {
     flexDirection: 'row',
@@ -223,13 +255,11 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 24,
     fontFamily: 'Inter-Bold',
-    color: Colors.text.primary,
     marginBottom: 4,
   },
   email: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.secondary,
     marginBottom: Spacing.sm,
   },
   followStats: {
@@ -239,21 +269,16 @@ const styles = StyleSheet.create({
   followText: {
     fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.secondary,
   },
   followNumber: {
     fontFamily: 'Inter-SemiBold',
-    color: Colors.text.primary,
   },
   settingsButton: {
     padding: Spacing.sm,
   },
-  
-  // Sections
   section: {
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -264,16 +289,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontFamily: 'Inter-SemiBold',
-    color: Colors.text.primary,
     marginBottom: Spacing.md,
   },
   seeAll: {
     fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: Colors.primary[500],
   },
-  
-  // Stats
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -282,7 +303,6 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: '47%',
-    backgroundColor: Colors.background.secondary,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
@@ -290,32 +310,26 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 18,
     fontFamily: 'Inter-Bold',
-    color: Colors.text.primary,
     marginTop: Spacing.xs,
   },
   statLabel: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.secondary,
     marginTop: 2,
     textAlign: 'center',
   },
-  
-  // Activities
   activitiesContainer: {
     gap: Spacing.sm,
   },
   activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.background.secondary,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
   },
   activityIcon: {
     width: 32,
     height: 32,
-    backgroundColor: Colors.background.primary,
     borderRadius: BorderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -327,21 +341,16 @@ const styles = StyleSheet.create({
   activityTitle: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: Colors.text.primary,
   },
   activityDetails: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.secondary,
     marginTop: 2,
   },
   activityPace: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: Colors.primary[500],
   },
-  
-  // Achievements
   achievementsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -350,7 +359,6 @@ const styles = StyleSheet.create({
   achievementCard: {
     flex: 1,
     minWidth: '47%',
-    backgroundColor: Colors.background.secondary,
     padding: Spacing.md,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
@@ -365,31 +373,19 @@ const styles = StyleSheet.create({
   achievementTitle: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-    color: Colors.text.primary,
     textAlign: 'center',
     marginBottom: 4,
   },
-  achievementTitleLocked: {
-    color: Colors.text.secondary,
-  },
+  achievementTitleLocked: {},
   achievementDescription: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.secondary,
     textAlign: 'center',
   },
-  achievementDescriptionLocked: {
-    color: Colors.text.tertiary,
-  },
-  
-  // Actions
+  achievementDescriptionLocked: {},
   actionButton: {
     marginBottom: Spacing.md,
   },
-  logoutButton: {
-    borderColor: Colors.error[500],
-  },
-  logoutButtonText: {
-    color: Colors.error[500],
-  },
+  logoutButton: {},
+  logoutButtonText: {},
 });

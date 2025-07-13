@@ -3,12 +3,13 @@ import { View, Text, StyleSheet, FlatList, RefreshControl, Alert } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActivityCard } from '@/components/ActivityCard';
 import { Activity } from '@/types/activity';
-import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { socialAPI, activityAPI } from '@/services/api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function FeedScreen() {
+  const { theme } = useTheme();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -103,12 +104,11 @@ export default function FeedScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Activity Feed</Text>
-        <Text style={styles.subtitle}>See what your friends are up to</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
+      <View style={[styles.header, { borderBottomColor: theme.colors.border.light }]}> 
+        <Text style={[styles.title, { color: theme.colors.text }]}>Activity Feed</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.secondary[500] }]}>See what your friends are up to</Text>
       </View>
-      
       <FlatList
         data={activities}
         renderItem={renderActivity}
@@ -119,19 +119,17 @@ export default function FeedScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={Colors.primary[500]}
+            tintColor={theme.colors.primary[500]}
           />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>No activities yet</Text>
+            <Text style={[styles.emptySubtitle, { color: theme.colors.secondary[500] }]}>Follow some athletes to see their activities here</Text>
+          </View>
         }
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No activities yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Follow some athletes to see their activities here
-            </Text>
-          </View>
-        }
       />
     </SafeAreaView>
   );
@@ -140,24 +138,20 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   header: {
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border.light,
   },
   title: {
     fontSize: 28,
     fontFamily: 'Inter-Bold',
-    color: Colors.text.primary,
     marginBottom: Spacing.xs,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.secondary,
   },
   listContent: {
     padding: Spacing.lg,
@@ -171,13 +165,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontFamily: 'Inter-SemiBold',
-    color: Colors.text.primary,
     marginBottom: Spacing.sm,
   },
   emptySubtitle: {
     fontSize: 16,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.secondary,
     textAlign: 'center',
   },
 });

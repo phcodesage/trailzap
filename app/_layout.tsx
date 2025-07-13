@@ -11,6 +11,10 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AuthProvider } from '@/contexts/AuthContext';
+import * as NavigationBar from 'expo-navigation-bar';
+import { Appearance } from 'react-native';
+import { Colors } from '@/constants/Colors';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -30,18 +34,34 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
+  useEffect(() => {
+    const setNavBar = () => {
+      const colorScheme = Appearance.getColorScheme();
+      if (colorScheme === 'dark') {
+        NavigationBar.setButtonStyleAsync('light');
+      } else {
+        NavigationBar.setButtonStyleAsync('dark');
+      }
+    };
+    setNavBar();
+    const listener = Appearance.addChangeListener(setNavBar);
+    return () => listener.remove();
+  }, []);
+
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
-    <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

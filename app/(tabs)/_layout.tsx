@@ -2,10 +2,13 @@ import { Tabs, Redirect } from 'expo-router';
 import { Chrome as Home, Play, User, Activity } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { Colors } from '@/constants/Colors';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -19,14 +22,14 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primary[500],
-        tabBarInactiveTintColor: Colors.neutral[500],
+        tabBarActiveTintColor: theme.colors.primary[500],
+        tabBarInactiveTintColor: theme.colors.neutral[500],
         tabBarStyle: {
-          backgroundColor: Colors.background.primary,
-          borderTopColor: Colors.border.light,
+          backgroundColor: theme.colors.background,
+          borderTopColor: theme.colors.card,
           paddingTop: 8,
-          paddingBottom: 8,
-          height: 88,
+          paddingBottom: 8 + insets.bottom,
+          height: 88 + insets.bottom,
         },
         tabBarLabelStyle: {
           fontSize: 12,
