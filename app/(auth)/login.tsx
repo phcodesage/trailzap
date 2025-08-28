@@ -10,18 +10,22 @@ import { Spacing } from '@/constants/Spacing';
 
 export default function LoginScreen() {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({});
 
   const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {};
-    
-    if (!email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Please enter a valid email';
+    const newErrors: { identifier?: string; password?: string } = {};
+    const value = identifier.trim();
+    if (!value) {
+      newErrors.identifier = 'Email or username is required';
+    } else if (value.includes('@')) {
+      if (!/\S+@\S+\.\S+/.test(value)) {
+        newErrors.identifier = 'Please enter a valid email';
+      }
+    } else if (value.length < 3) {
+      newErrors.identifier = 'Username must be at least 3 characters';
     }
     
     if (!password.trim()) {
@@ -39,11 +43,11 @@ export default function LoginScreen() {
     
     setIsLoading(true);
     try {
-      const success = await login({ email: email.trim(), password });
+      const success = await login({ identifier: identifier.trim(), password });
       if (success) {
         router.replace('/(tabs)');
       } else {
-        Alert.alert('Login Failed', 'Invalid email or password');
+        Alert.alert('Login Failed', 'Invalid credentials');
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred');
@@ -62,13 +66,13 @@ export default function LoginScreen() {
 
         <View style={styles.form}>
           <Input
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Enter your email"
-            keyboardType="email-address"
+            label="Email or Username"
+            value={identifier}
+            onChangeText={setIdentifier}
+            placeholder="Enter your email or username"
             autoCapitalize="none"
-            error={errors.email}
+            autoCorrect={false}
+            error={errors.identifier}
           />
           
           <Input

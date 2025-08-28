@@ -84,16 +84,20 @@ router.post('/signup', async (req, res) => {
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (!identifier || !password) {
+      return res.status(400).json({ error: 'Identifier and password are required' });
     }
 
-    // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Find user by email or username
+    const isEmail = typeof identifier === 'string' && identifier.includes('@');
+    const query = isEmail
+      ? { email: identifier.toLowerCase() }
+      : { username: identifier };
+    const user = await User.findOne(query);
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Check if account is active
@@ -104,7 +108,7 @@ router.post('/login', async (req, res) => {
     // Verify password
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     // Update last active
