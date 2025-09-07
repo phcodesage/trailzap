@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Alert, Platform } from 'react-native';
+import { View, StyleSheet, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Play, Pause, Square, MapPin, Clock, Zap } from 'lucide-react-native';
 import * as Location from 'expo-location';
@@ -10,6 +10,14 @@ import { Spacing, BorderRadius } from '@/constants/Spacing';
 import { activityAPI } from '@/services/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import {
+  Text as PaperText,
+  Card,
+  Surface,
+  Button as PaperButton,
+  Dialog,
+  Portal
+} from 'react-native-paper';
 
 type TrackingState = 'idle' | 'tracking' | 'paused';
 
@@ -217,14 +225,18 @@ const [currentPace, setCurrentPace] = useState(0);
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
         <View style={styles.permissionContainer}>
-          <MapPin size={48} color={theme.colors.primary[500]} />
-          <Text style={[styles.permissionTitle, { color: theme.colors.text }]}>Location Access Required</Text>
-          <Text style={[styles.permissionText, { color: theme.colors.secondary[500] }]}>TrailZap needs access to your location to track your fitness activities and create route maps.</Text>
-          <Button
-            title="Grant Permission"
-            onPress={() => {}}
+          <Surface style={styles.permissionIconContainer} elevation={2}>
+            <MapPin size={48} color={theme.colors.primary[500]} />
+          </Surface>
+          <PaperText variant="headlineMedium" style={[styles.permissionTitle, { color: theme.colors.text }]}>Location Access Required</PaperText>
+          <PaperText variant="bodyLarge" style={[styles.permissionText, { color: theme.colors.secondary[500] }]}>TrailZap needs access to your location to track your fitness activities and create route maps.</PaperText>
+          <PaperButton
+            mode="contained"
+            onPress={startTracking}
             style={styles.permissionButton}
-          />
+          >
+            Grant Permission
+          </PaperButton>
         </View>
       </SafeAreaView>
     );
@@ -235,79 +247,110 @@ const [currentPace, setCurrentPace] = useState(0);
       <View style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.colors.text }]}>Track Activity</Text>
-          <Text style={[styles.subtitle, { color: theme.colors.secondary[500] }]}> {/* Subtitle here */} </Text>
+          <PaperText variant="headlineLarge" style={[styles.title, { color: theme.colors.text }]}>Track Activity</PaperText>
+          <PaperText variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.secondary[500] }]}>Ready to start your workout?</PaperText>
         </View>
         {/* Stats */}
         <View style={styles.statsContainer}>
-          <View style={styles.mainStat}>
-            <Text style={[styles.mainStatValue, { color: theme.colors.primary[500] }]}>0.00</Text>
-            <Text style={[styles.mainStatLabel, { color: theme.colors.secondary[500] }]}>Distance (km)</Text>
-          </View>
+          <Card style={styles.mainStatCard} elevation={3}>
+            <Card.Content style={styles.mainStat}>
+              <PaperText variant="displayMedium" style={[styles.mainStatValue, { color: theme.colors.primary[500] }]}>
+                {locationUtils.formatDistance(currentDistance)}
+              </PaperText>
+              <PaperText variant="titleMedium" style={[styles.mainStatLabel, { color: theme.colors.secondary[500] }]}>Distance</PaperText>
+            </Card.Content>
+          </Card>
           <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Zap size={20} color={theme.colors.accent[500]} />
-              <Text style={[styles.statValue, { color: theme.colors.text }]}>0</Text>
-              <Text style={[styles.statLabel, { color: theme.colors.secondary[500] }]}>Calories</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Clock size={20} color={theme.colors.accent[500]} />
-              <Text style={[styles.statValue, { color: theme.colors.text }]}>{currentRoute.length}</Text>
-              <Text style={[styles.statLabel, { color: theme.colors.secondary[500] }]}>Points</Text>
-            </View>
+            <Card style={styles.statCard} elevation={2}>
+              <Card.Content style={styles.statItem}>
+                <Surface style={[styles.statIconContainer, { backgroundColor: theme.colors.accent[50] }]} elevation={1}>
+                  <Clock size={20} color={theme.colors.accent[500]} />
+                </Surface>
+                <PaperText variant="titleLarge" style={[styles.statValue, { color: theme.colors.text }]}>
+                  {locationUtils.formatDuration(elapsedTime)}
+                </PaperText>
+                <PaperText variant="bodySmall" style={[styles.statLabel, { color: theme.colors.secondary[500] }]}>Time</PaperText>
+              </Card.Content>
+            </Card>
+            <Card style={styles.statCard} elevation={2}>
+              <Card.Content style={styles.statItem}>
+                <Surface style={[styles.statIconContainer, { backgroundColor: theme.colors.accent[50] }]} elevation={1}>
+                  <Zap size={20} color={theme.colors.accent[500]} />
+                </Surface>
+                <PaperText variant="titleLarge" style={[styles.statValue, { color: theme.colors.text }]}>
+                  {currentPace > 0 ? `${currentPace.toFixed(1)}` : '--'}
+                </PaperText>
+                <PaperText variant="bodySmall" style={[styles.statLabel, { color: theme.colors.secondary[500] }]}>Pace (min/km)</PaperText>
+              </Card.Content>
+            </Card>
           </View>
         </View>
         {/* Map Placeholder */}
         <View style={styles.mapContainer}>
-          <View style={[styles.mapPlaceholder, { backgroundColor: theme.colors.card, borderRadius: BorderRadius.lg }]}>
-            <MapPin size={32} color={theme.colors.primary[500]} />
-            <Text style={[styles.mapText, { color: theme.colors.secondary[500] }]}> 
-              {trackingState === 'idle' 
-                ? 'Your route will appear here'
-                : `Tracking your route • ${currentRoute.length} points recorded`
-              }
-            </Text>
-          </View>
+          <Card style={styles.mapCard} elevation={2}>
+            <Card.Content style={styles.mapPlaceholder}>
+              <Surface style={styles.mapIconContainer} elevation={1}>
+                <MapPin size={32} color={theme.colors.primary[500]} />
+              </Surface>
+              <PaperText variant="bodyLarge" style={[styles.mapText, { color: theme.colors.secondary[500] }]}> 
+                {trackingState === 'idle' 
+                  ? 'Your route will appear here'
+                  : `Tracking your route • ${currentRoute.length} points recorded`
+                }
+              </PaperText>
+            </Card.Content>
+          </Card>
         </View>
         {/* Controls */}
         <View style={styles.controls}>
           {trackingState === 'idle' && (
-            <Button
-              title="Start Activity"
-              onPress={() => {}}
-              size="large"
-              style={{ backgroundColor: theme.colors.primary[500] }}
-            />
+            <PaperButton
+              mode="contained"
+              onPress={startTracking}
+              style={styles.startButton}
+              contentStyle={styles.buttonContent}
+            >
+              Start Activity
+            </PaperButton>
           )}
           {trackingState === 'tracking' && (
             <View style={styles.trackingControls}>
-              <Button
-                title="Pause"
-                onPress={() => {}}
-                variant="secondary"
+              <PaperButton
+                mode="contained-tonal"
+                onPress={pauseTracking}
                 style={styles.controlButton}
-              />
-              <Button
-                title="Stop"
-                onPress={() => {}}
-                variant="outline"
+                icon={() => <Pause size={20} color={theme.colors.primary[500]} />}
+              >
+                Pause
+              </PaperButton>
+              <PaperButton
+                mode="outlined"
+                onPress={stopTracking}
                 style={styles.controlButton}
-              />
+                icon={() => <Square size={20} color={theme.colors.error[500]} />}
+              >
+                Stop
+              </PaperButton>
             </View>
           )}
           {trackingState === 'paused' && (
             <View style={styles.trackingControls}>
-              <Button
-                title="Resume"
-                onPress={() => {}}
+              <PaperButton
+                mode="contained"
+                onPress={resumeTracking}
                 style={styles.controlButton}
-              />
-              <Button
-                title="Stop"
-                onPress={() => {}}
-                variant="outline"
+                icon={() => <Play size={20} color="white" />}
+              >
+                Resume
+              </PaperButton>
+              <PaperButton
+                mode="outlined"
+                onPress={stopTracking}
                 style={styles.controlButton}
-              />
+                icon={() => <Square size={20} color={theme.colors.error[500]} />}
+              >
+                Stop
+              </PaperButton>
             </View>
           )}
         </View>
@@ -421,5 +464,46 @@ const styles = StyleSheet.create({
   },
   controlButton: {
     flex: 1,
+  },
+  permissionIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.lg,
+  },
+  mainStatCard: {
+    marginBottom: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+  },
+  statCard: {
+    flex: 1,
+    marginHorizontal: Spacing.xs,
+    borderRadius: BorderRadius.md,
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.sm,
+  },
+  mapCard: {
+    flex: 1,
+    borderRadius: BorderRadius.lg,
+  },
+  mapIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  buttonContent: {
+    paddingVertical: Spacing.sm,
   },
 });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, Alert } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActivityCard } from '@/components/ActivityCard';
 import { Activity } from '@/types/activity';
@@ -7,6 +7,7 @@ import { Spacing } from '@/constants/Spacing';
 import { socialAPI, activityAPI } from '@/services/api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Text as PaperText } from 'react-native-paper';
 
 export default function FeedScreen() {
   const { theme } = useTheme();
@@ -106,8 +107,8 @@ export default function FeedScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
       <View style={[styles.header, { borderBottomColor: theme.colors.border.light }]}> 
-        <Text style={[styles.title, { color: theme.colors.text }]}>Activity Feed</Text>
-        <Text style={[styles.subtitle, { color: theme.colors.secondary[500] }]}>See what your friends are up to</Text>
+        <PaperText variant="headlineLarge" style={[styles.title, { color: theme.colors.text }]}>Activity Feed</PaperText>
+        <PaperText variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.secondary[500] }]}>See what your friends are up to</PaperText>
       </View>
       <FlatList
         data={activities}
@@ -124,8 +125,8 @@ export default function FeedScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>No activities yet</Text>
-            <Text style={[styles.emptySubtitle, { color: theme.colors.secondary[500] }]}>Follow some athletes to see their activities here</Text>
+            <PaperText variant="titleLarge" style={[styles.emptyTitle, { color: theme.colors.text }]}>No activities yet</PaperText>
+            <PaperText variant="bodyLarge" style={[styles.emptySubtitle, { color: theme.colors.secondary[500] }]}>Follow some athletes to see their activities here</PaperText>
           </View>
         }
         onEndReached={handleLoadMore}

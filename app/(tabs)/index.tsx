@@ -42,9 +42,9 @@ export default function HomeScreen() {
             <PaperText variant="bodyLarge" style={{ color: theme.colors.secondary[500] }}>Good morning,</PaperText>
             <PaperText variant="headlineMedium" style={{ color: theme.colors.text }}>{user?.username || 'Athlete'}</PaperText>
           </View>
-          <Surface style={[styles.streakContainer, { backgroundColor: theme.colors.accent[50] }]} elevation={1}> 
+          <Surface style={[styles.streakContainer, { backgroundColor: theme.mode === 'dark' ? theme.colors.accent[900] : theme.colors.accent[50] }]} elevation={1}> 
             <PaperText variant="titleLarge" style={{ color: theme.colors.accent[500] }}>7</PaperText>
-            <PaperText variant="bodySmall" style={{ color: theme.colors.accent[600] }}>day streak</PaperText>
+            <PaperText variant="bodySmall" style={{ color: theme.mode === 'dark' ? theme.colors.accent[400] : theme.colors.accent[600] }}>day streak</PaperText>
           </Surface>
         </View>
 
@@ -75,37 +75,18 @@ export default function HomeScreen() {
           <View style={styles.sectionHeader}>
             <PaperText variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.text }]}>Your Stats</PaperText>
           </View>
-          <View style={styles.statsContainer}>
-            <View style={styles.statsRow}>
-              {quickStats.slice(0, 2).map((stat, index) => (
-                <Card key={index} style={styles.statCardLarge} elevation={2}> 
-                  <Card.Content style={styles.statCardContentLarge}>
-                    <View style={styles.statIconContainer}>
-                      <stat.icon size={24} color={stat.color} />
-                    </View>
-                    <View style={styles.statTextContainer}>
-                      <PaperText variant="headlineSmall" style={[styles.statValueLarge, { color: theme.colors.text }]}>{stat.value}</PaperText>
-                      <PaperText variant="bodyMedium" style={[styles.statLabelLarge, { color: theme.colors.secondary[500] }]}>{stat.label}</PaperText>
-                    </View>
-                  </Card.Content>
-                </Card>
-              ))}
-            </View>
-            <View style={styles.statsRow}>
-              {quickStats.slice(2, 4).map((stat, index) => (
-                <Card key={index + 2} style={styles.statCardLarge} elevation={2}> 
-                  <Card.Content style={styles.statCardContentLarge}>
-                    <View style={styles.statIconContainer}>
-                      <stat.icon size={24} color={stat.color} />
-                    </View>
-                    <View style={styles.statTextContainer}>
-                      <PaperText variant="headlineSmall" style={[styles.statValueLarge, { color: theme.colors.text }]}>{stat.value}</PaperText>
-                      <PaperText variant="bodyMedium" style={[styles.statLabelLarge, { color: theme.colors.secondary[500] }]}>{stat.label}</PaperText>
-                    </View>
-                  </Card.Content>
-                </Card>
-              ))}
-            </View>
+          <View style={styles.statsGrid}>
+            {quickStats.map((stat, index) => (
+              <Card key={index} style={[styles.statCard, { backgroundColor: theme.colors.card }]} elevation={2}> 
+                <Card.Content style={styles.statCardContent}>
+                  <View style={[styles.statIconContainer, { backgroundColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
+                    <stat.icon size={20} color={stat.color} />
+                  </View>
+                  <PaperText variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{stat.value}</PaperText>
+                  <PaperText variant="bodyMedium" style={[styles.statLabel, { color: theme.colors.secondary[500] }]}>{stat.label}</PaperText>
+                </Card.Content>
+              </Card>
+            ))}
           </View>
         </View>
 
@@ -117,7 +98,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.goalsContainer}>
             {weeklyGoals.map((goal, index) => (
-              <Card key={index} style={styles.goalCard} elevation={2}> 
+              <Card key={index} style={[styles.goalCard, { backgroundColor: theme.colors.card }]} elevation={2}> 
                 <Card.Content>
                   <View style={styles.goalHeader}>
                     <PaperText variant="bodyMedium" style={[styles.goalTitle, { color: theme.colors.text }]}>{goal.title}</PaperText>
@@ -128,7 +109,7 @@ export default function HomeScreen() {
                   <ProgressBar 
                     progress={Math.min(goal.current / goal.target, 1)} 
                     color={theme.colors.primary[500]}
-                    style={styles.progressBar}
+                    style={[styles.progressBar, { backgroundColor: theme.mode === 'dark' ? theme.colors.neutral[700] : theme.colors.neutral[200] }]}
                   />
                 </Card.Content>
               </Card>
@@ -147,9 +128,9 @@ export default function HomeScreen() {
             />
           </View>
           <View style={styles.recentActivity}>
-            <Card style={styles.activityCard} elevation={2}> 
+            <Card style={[styles.activityCard, { backgroundColor: theme.colors.card }]} elevation={2}> 
               <Card.Content style={styles.activityItem}>
-                <Surface style={[styles.activityIcon, { backgroundColor: theme.colors.background }]} elevation={1}> 
+                <Surface style={[styles.activityIcon, { backgroundColor: theme.mode === 'dark' ? theme.colors.primary[900] : theme.colors.primary[50] }]} elevation={1}> 
                   <MapPin size={16} color={theme.colors.primary[500]} />
                 </Surface>
                 <View style={styles.activityInfo}>
@@ -159,9 +140,9 @@ export default function HomeScreen() {
                 <PaperText variant="bodyMedium" style={[styles.activityPace, { color: theme.colors.primary[500] }]}>5:29/km</PaperText>
               </Card.Content>
             </Card>
-            <Card style={styles.activityCard} elevation={2}> 
+            <Card style={[styles.activityCard, { backgroundColor: theme.colors.card }]} elevation={2}> 
               <Card.Content style={styles.activityItem}>
-                <Surface style={[styles.activityIcon, { backgroundColor: theme.colors.background }]} elevation={1}> 
+                <Surface style={[styles.activityIcon, { backgroundColor: theme.mode === 'dark' ? theme.colors.secondary[900] : theme.colors.secondary[50] }]} elevation={1}> 
                   <Zap size={16} color={theme.colors.secondary[500]} />
                 </Surface>
                 <View style={styles.activityInfo}>
@@ -261,42 +242,40 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Inter-SemiBold',
   },
-  statsContainer: {
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     paddingHorizontal: Spacing.lg,
     gap: Spacing.md,
   },
-  statsRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  statCardLarge: {
-    flex: 1,
+  statCard: {
+    width: '47%',
     borderRadius: BorderRadius.lg,
+    minHeight: 120,
   },
-  statCardContentLarge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-  },
-  statIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.lg,
+  statCardContent: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: Spacing.md,
-    backgroundColor: 'rgba(0,0,0,0.05)',
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+    minHeight: 88,
   },
-  statTextContainer: {
-    flex: 1,
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.sm,
   },
-  statValueLarge: {
+  statValue: {
     fontFamily: 'Inter-Bold',
-    marginBottom: 2,
+    marginBottom: 4,
+    textAlign: 'center',
   },
-  statLabelLarge: {
+  statLabel: {
     fontFamily: 'Inter-Medium',
+    textAlign: 'center',
   },
   goalsContainer: {
     paddingHorizontal: Spacing.lg,
@@ -362,9 +341,6 @@ const styles = StyleSheet.create({
   activityPace: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
-  },
-  statCardContent: {
-    alignItems: 'center',
   },
   activityCard: {
     marginBottom: Spacing.sm,

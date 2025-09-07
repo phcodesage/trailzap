@@ -10,13 +10,15 @@ import {
   Surface, 
   Divider,
   Modal as PaperModal,
-  Switch as PaperSwitch
+  Switch as PaperSwitch,
+  RadioButton,
+  List
 } from 'react-native-paper';
 import { useTheme } from '@/contexts/ThemeContext';
 import * as NavigationBar from 'expo-navigation-bar';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Settings, CreditCard as Edit3, MapPin, Clock, Zap, Trophy, Users, Calendar } from 'lucide-react-native';
+import { Settings, CreditCard as Edit3, MapPin, Clock, Zap, Trophy, Users, Calendar, Target, Moon, Sun, Smartphone } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 // import { Button } from '@/components/Button'; // Replaced with Paper Button
@@ -25,9 +27,10 @@ import { locationUtils } from '@/utils/locationUtils';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, themeMode, setThemeMode } = useTheme();
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [logoutDialogVisible, setLogoutDialogVisible] = useState(false);
+  const [themeSettingsVisible, setThemeSettingsVisible] = useState(false);
 
   const handleLogout = () => {
     setLogoutDialogVisible(true);
@@ -210,6 +213,30 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Settings */}
+        <View style={styles.section}>
+          <PaperText variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.text }]}>Settings</PaperText>
+          <Card style={styles.settingsCard} elevation={2}>
+            <Card.Content>
+              <View style={styles.settingItem}>
+                <View style={styles.settingInfo}>
+                  <PaperText variant="bodyLarge" style={{ color: theme.colors.text }}>Theme</PaperText>
+                  <PaperText variant="bodySmall" style={{ color: theme.colors.secondary[500] }}>
+                    {themeMode === 'auto' ? 'Follow system' : themeMode === 'dark' ? 'Dark mode' : 'Light mode'}
+                  </PaperText>
+                </View>
+                <PaperButton
+                  mode="outlined"
+                  onPress={() => setThemeSettingsVisible(true)}
+                  compact
+                >
+                  Change
+                </PaperButton>
+              </View>
+            </Card.Content>
+          </Card>
+        </View>
+
         {/* Actions */}
         <View style={styles.section}>
           <PaperButton
@@ -247,13 +274,13 @@ export default function ProfileScreen() {
           }}
         >
           <PaperText variant="headlineSmall" style={{ color: theme.colors.text, marginBottom: 16 }}>
-            Theme
+            Settings
           </PaperText>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
             <PaperText style={{ marginRight: 8, color: theme.colors.text }}>Light</PaperText>
             <PaperSwitch
               value={theme.mode === 'dark'}
-              onValueChange={toggleTheme}
+              onValueChange={(value) => setThemeMode(value ? 'dark' : 'light')}
             />
             <PaperText style={{ marginLeft: 8, color: theme.colors.text }}>Dark</PaperText>
           </View>
@@ -267,8 +294,8 @@ export default function ProfileScreen() {
         <Dialog visible={logoutDialogVisible} onDismiss={cancelLogout}>
           <Dialog.Title>Sign Out</Dialog.Title>
           <Dialog.Content>
-            <PaperText variant="bodyMedium">
-              Are you sure you want to sign out of your account?
+            <PaperText variant="bodyMedium" style={{ color: theme.colors.text }}>
+              Are you sure you want to sign out?
             </PaperText>
           </Dialog.Content>
           <Dialog.Actions>
@@ -279,6 +306,49 @@ export default function ProfileScreen() {
             >
               Sign Out
             </PaperButton>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+      
+      <Portal>
+        <Dialog visible={themeSettingsVisible} onDismiss={() => setThemeSettingsVisible(false)}>
+          <Dialog.Title>Choose Theme</Dialog.Title>
+          <Dialog.Content>
+            <RadioButton.Group onValueChange={(value) => setThemeMode(value as 'light' | 'dark' | 'auto')} value={themeMode}>
+              <View style={styles.themeOption}>
+                <View style={styles.themeOptionContent}>
+                  <Smartphone size={20} color={theme.colors.text} />
+                  <View style={styles.themeOptionText}>
+                    <PaperText variant="bodyLarge" style={{ color: theme.colors.text }}>Follow System</PaperText>
+                    <PaperText variant="bodySmall" style={{ color: theme.colors.secondary[500] }}>Use your device's theme setting</PaperText>
+                  </View>
+                </View>
+                <RadioButton value="auto" />
+              </View>
+              <View style={styles.themeOption}>
+                <View style={styles.themeOptionContent}>
+                  <Sun size={20} color={theme.colors.text} />
+                  <View style={styles.themeOptionText}>
+                    <PaperText variant="bodyLarge" style={{ color: theme.colors.text }}>Light Mode</PaperText>
+                    <PaperText variant="bodySmall" style={{ color: theme.colors.secondary[500] }}>Always use light theme</PaperText>
+                  </View>
+                </View>
+                <RadioButton value="light" />
+              </View>
+              <View style={styles.themeOption}>
+                <View style={styles.themeOptionContent}>
+                  <Moon size={20} color={theme.colors.text} />
+                  <View style={styles.themeOptionText}>
+                    <PaperText variant="bodyLarge" style={{ color: theme.colors.text }}>Dark Mode</PaperText>
+                    <PaperText variant="bodySmall" style={{ color: theme.colors.secondary[500] }}>Always use dark theme</PaperText>
+                  </View>
+                </View>
+                <RadioButton value="dark" />
+              </View>
+            </RadioButton.Group>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <PaperButton onPress={() => setThemeSettingsVisible(false)}>Done</PaperButton>
           </Dialog.Actions>
         </Dialog>
       </Portal>
@@ -450,4 +520,31 @@ const styles = StyleSheet.create({
   },
   logoutButton: {},
   logoutButtonText: {},
+  settingsCard: {
+    marginBottom: Spacing.md,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.sm,
+  },
+  settingInfo: {
+    flex: 1,
+  },
+  themeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.md,
+  },
+  themeOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  themeOptionText: {
+    marginLeft: Spacing.md,
+    flex: 1,
+  },
 });
