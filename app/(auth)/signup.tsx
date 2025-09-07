@@ -54,21 +54,28 @@ export default function SignupScreen() {
     if (!validateForm()) return;
     
     setIsLoading(true);
+    setErrors(prev => ({ ...prev, auth: '' })); // Clear previous auth errors
+    
     try {
-      const success = await signup({
+      const result = await signup({
         username: formData.username.trim(),
         email: formData.email.trim(),
         password: formData.password,
         confirmPassword: formData.confirmPassword,
       });
       
-      if (success) {
-        router.replace('/(tabs)');
+      if (result.success) {
+        if (result.error) {
+          // Email confirmation required
+          setErrors(prev => ({ ...prev, auth: result.error || '' }));
+        } else {
+          router.replace('/(tabs)');
+        }
       } else {
-        Alert.alert('Signup Failed', 'Please try again');
+        setErrors(prev => ({ ...prev, auth: result.error || '' }));
       }
     } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred');
+      setErrors(prev => ({ ...prev, auth: 'An unexpected error occurred. Please try again.' }));
     } finally {
       setIsLoading(false);
     }
@@ -126,6 +133,12 @@ export default function SignupScreen() {
             secureTextEntry
             error={errors.confirmPassword}
           />
+          
+          {errors.auth && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errors.auth}</Text>
+            </View>
+          )}
 
           <Button
             title={isLoading ? "Creating Account..." : "Create Account"}
@@ -194,5 +207,19 @@ const styles = StyleSheet.create({
   link: {
     color: Colors.primary[500],
     fontFamily: 'Inter-SemiBold',
+  },
+  errorContainer: {
+    marginTop: Spacing.sm,
+    padding: Spacing.sm,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  errorText: {
+    color: '#DC2626',
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    textAlign: 'center',
   },
 });

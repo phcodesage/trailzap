@@ -13,19 +13,15 @@ export default function LoginScreen() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ identifier?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ identifier?: string; password?: string; auth?: string }>({});
 
   const validateForm = () => {
     const newErrors: { identifier?: string; password?: string } = {};
     const value = identifier.trim();
     if (!value) {
-      newErrors.identifier = 'Email or username is required';
-    } else if (value.includes('@')) {
-      if (!/\S+@\S+\.\S+/.test(value)) {
-        newErrors.identifier = 'Please enter a valid email';
-      }
-    } else if (value.length < 3) {
-      newErrors.identifier = 'Username must be at least 3 characters';
+      newErrors.identifier = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(value)) {
+      newErrors.identifier = 'Please enter a valid email address';
     }
     
     if (!password.trim()) {
@@ -42,15 +38,17 @@ export default function LoginScreen() {
     if (!validateForm()) return;
     
     setIsLoading(true);
+    setErrors(prev => ({ ...prev, auth: undefined })); // Clear previous auth errors
+    
     try {
-      const success = await login({ identifier: identifier.trim(), password });
-      if (success) {
+      const result = await login({ identifier: identifier.trim(), password });
+      if (result.success) {
         router.replace('/(tabs)');
       } else {
-        Alert.alert('Login Failed', 'Invalid credentials');
+        setErrors(prev => ({ ...prev, auth: result.error }));
       }
     } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred');
+      setErrors(prev => ({ ...prev, auth: 'An unexpected error occurred. Please try again.' }));
     } finally {
       setIsLoading(false);
     }
@@ -66,10 +64,11 @@ export default function LoginScreen() {
 
         <View style={styles.form}>
           <Input
-            label="Email or Username"
+            label="Email"
             value={identifier}
             onChangeText={setIdentifier}
-            placeholder="Enter your email or username"
+            placeholder="Enter your email address"
+            keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
             error={errors.identifier}
@@ -83,6 +82,12 @@ export default function LoginScreen() {
             secureTextEntry
             error={errors.password}
           />
+          
+          {errors.auth && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errors.auth}</Text>
+            </View>
+          )}
 
           <Button
             title={isLoading ? "Signing in..." : "Sign In"}
@@ -151,5 +156,19 @@ const styles = StyleSheet.create({
   link: {
     color: Colors.primary[500],
     fontFamily: 'Inter-SemiBold',
+  },
+  errorContainer: {
+    marginTop: Spacing.sm,
+    padding: Spacing.sm,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  errorText: {
+    color: '#DC2626',
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    textAlign: 'center',
   },
 });
