@@ -1,203 +1,203 @@
-const mongoose = require('mongoose');
+const { query, transaction } = require('../config/database');
 
-const geoPointSchema = new mongoose.Schema({
-  latitude: {
-    type: Number,
-    required: true,
-    min: -90,
-    max: 90
-  },
-  longitude: {
-    type: Number,
-    required: true,
-    min: -180,
-    max: 180
-  },
-  altitude: {
-    type: Number,
-    default: null
-  },
-  timestamp: {
-    type: Number,
-    required: true
+class Activity {
+  constructor(activityData) {
+    Object.assign(this, activityData);
   }
-}, { _id: false });
 
-const activitySchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  title: {
-    type: String,
-    required: [true, 'Activity title is required'],
-    trim: true,
-    maxlength: [100, 'Title cannot exceed 100 characters']
-  },
-  description: {
-    type: String,
-    maxlength: [1000, 'Description cannot exceed 1000 characters'],
-    default: ''
-  },
-  type: {
-    type: String,
-    required: true,
-    enum: ['running', 'cycling', 'walking', 'hiking', 'swimming', 'other'],
-    default: 'running'
-  },
-  startTime: {
-    type: Date,
-    required: true
-  },
-  endTime: {
-    type: Date,
-    required: true
-  },
-  duration: {
-    type: Number,
-    required: true,
-    min: 0 // in seconds
-  },
-  distance: {
-    type: Number,
-    required: true,
-    min: 0 // in meters
-  },
-  elevationGain: {
-    type: Number,
-    default: 0,
-    min: 0 // in meters
-  },
-  avgPace: {
-    type: Number,
-    default: 0,
-    min: 0 // seconds per km
-  },
-  maxSpeed: {
-    type: Number,
-    default: 0,
-    min: 0 // km/h
-  },
-  calories: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  // GeoJSON route data
-  route: {
-    type: {
-      type: String,
-      enum: ['LineString'],
-      default: 'LineString'
-    },
-    coordinates: {
-      type: [[Number]], // Array of [longitude, latitude, altitude?]
-      default: []
-    }
-  },
-  // Alternative route storage (for compatibility)
-  routePoints: [geoPointSchema],
-  
-  // Weather data (optional)
-  weather: {
-    temperature: Number,
-    humidity: Number,
-    windSpeed: Number,
-    conditions: String
-  },
-  
-  // Privacy and sharing
-  isPublic: {
-    type: Boolean,
-    default: true
-  },
-  
-  // Social engagement
-  likes: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  
-  // Performance metrics
-  heartRate: {
-    avg: Number,
-    max: Number,
-    zones: {
-      zone1: Number, // Recovery
-      zone2: Number, // Aerobic
-      zone3: Number, // Threshold
-      zone4: Number, // VO2 Max
-      zone5: Number  // Anaerobic
-    }
-  },
-  
-  // Equipment used
-  equipment: {
-    shoes: String,
-    bike: String,
-    other: [String]
+  // Create a new activity
+  static async create(activityData) {
+    const {
+      userId, title, description, type, startTime, endTime, duration,
+      distance, elevationGain, avgPace, maxSpeed, calories, route,
+      weather, isPublic, heartRate, equipment
+    } = activityData;
+
+    // Calculate metrics if not provided
+    const calculatedAvgPace = avgPace || (distance > 0 && duration > 0 ? 
+      (duration / 60) / (distance / 1000) : 0);
+    const calculatedMaxSpeed = maxSpeed || (distance > 0 && duration > 0 ? 
+      (distance / 1000) / (duration / 3600) : 0);
+
+    const result = await query(
+      `INSERT INTO activities (
+        user_id, title, description, type, start_time, end_time, duration,
+        distance, elevation_gain, avg_pace, max_speed, calories, route,
+        weather, is_public, heart_rate, equipment
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+      RETURNING *`,
+      [
+        userId, title, description || '', type, startTime, endTime, duration,
+        distance, elevationGain || 0, calculatedAvgPace, calculatedMaxSpeed,
+        calories || 0, JSON.stringify(route), JSON.stringify(weather),
+        isPublic !== false, JSON.stringify(heartRate), JSON.stringify(equipment)
+      ]
+    );
+
+    return new Activity(result.rows[0]);
   }
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
 
-// Indexes for performance
-activitySchema.index({ userId: 1, createdAt: -1 });
-activitySchema.index({ type: 1 });
-activitySchema.index({ isPublic: 1, createdAt: -1 });
-activitySchema.index({ 'route': '2dsphere' }); // Geospatial index
-activitySchema.index({ likes: 1 });
-
-// Virtual for like count
-activitySchema.virtual('likeCount').get(function() {
-  return this.likes.length;
-});
-
-// Virtual for average speed (km/h)
-activitySchema.virtual('avgSpeed').get(function() {
-  if (this.duration === 0) return 0;
-  return (this.distance / 1000) / (this.duration / 3600);
-});
-
-// Pre-save middleware to calculate metrics
-activitySchema.pre('save', function(next) {
-  // Calculate average pace if not provided
-  if (this.distance > 0 && this.duration > 0 && !this.avgPace) {
-    this.avgPace = (this.duration / 60) / (this.distance / 1000); // minutes per km
+  // Find activity by ID
+  static async findById(id) {
+    const result = await query(
+      `SELECT a.*, u.username, u.profile_pic 
+       FROM activities a 
+       JOIN users u ON a.user_id = u.id 
+       WHERE a.id = $1`,
+      [id]
+    );
+    return result.rows[0] ? new Activity(result.rows[0]) : null;
   }
-  
-  // Calculate max speed if not provided
-  if (this.distance > 0 && this.duration > 0 && !this.maxSpeed) {
-    this.maxSpeed = (this.distance / 1000) / (this.duration / 3600); // km/h
+
+  // Get activities feed (public activities from other users)
+  static async getFeed(userId, page = 1, limit = 20) {
+    const offset = (page - 1) * limit;
+    const result = await query(
+      `SELECT a.*, u.username, u.profile_pic,
+       (SELECT COUNT(*) FROM activity_likes al WHERE al.activity_id = a.id) as like_count
+       FROM activities a
+       JOIN users u ON a.user_id = u.id
+       WHERE a.is_public = true AND a.user_id != $1
+       ORDER BY a.created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [userId, limit, offset]
+    );
+    return result.rows.map(row => new Activity(row));
   }
-  
-  next();
-});
 
-// Static method to get activities feed
-activitySchema.statics.getFeed = function(userId, page = 1, limit = 20) {
-  return this.find({ 
-    isPublic: true,
-    userId: { $ne: userId } // Exclude user's own activities
-  })
-  .populate('userId', 'username profilePic')
-  .sort({ createdAt: -1 })
-  .limit(limit * 1)
-  .skip((page - 1) * limit)
-  .lean();
-};
+  // Get user's activities
+  static async getUserActivities(userId, page = 1, limit = 20) {
+    const offset = (page - 1) * limit;
+    const result = await query(
+      `SELECT a.*, u.username, u.profile_pic,
+       (SELECT COUNT(*) FROM activity_likes al WHERE al.activity_id = a.id) as like_count
+       FROM activities a
+       JOIN users u ON a.user_id = u.id
+       WHERE a.user_id = $1
+       ORDER BY a.created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [userId, limit, offset]
+    );
+    return result.rows.map(row => new Activity(row));
+  }
 
-// Static method to get user's activities
-activitySchema.statics.getUserActivities = function(userId, page = 1, limit = 20) {
-  return this.find({ userId })
-  .populate('userId', 'username profilePic')
-  .sort({ createdAt: -1 })
-  .limit(limit * 1)
-  .skip((page - 1) * limit)
-  .lean();
-};
+  // Update activity
+  async update(updateData) {
+    const fields = [];
+    const values = [];
+    let paramCount = 1;
 
-module.exports = mongoose.model('Activity', activitySchema);
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] !== undefined) {
+        const dbField = this.camelToSnake(key);
+        if (['route', 'weather', 'heart_rate', 'equipment'].includes(dbField)) {
+          fields.push(`${dbField} = $${paramCount}`);
+          values.push(JSON.stringify(updateData[key]));
+        } else {
+          fields.push(`${dbField} = $${paramCount}`);
+          values.push(updateData[key]);
+        }
+        paramCount++;
+      }
+    });
+
+    if (fields.length === 0) return this;
+
+    values.push(this.id);
+    const result = await query(
+      `UPDATE activities SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`,
+      values
+    );
+
+    Object.assign(this, result.rows[0]);
+    return this;
+  }
+
+  // Delete activity
+  async delete() {
+    await query('DELETE FROM activities WHERE id = $1', [this.id]);
+  }
+
+  // Like activity
+  async like(userId) {
+    await query(
+      'INSERT INTO activity_likes (activity_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [this.id, userId]
+    );
+  }
+
+  // Unlike activity
+  async unlike(userId) {
+    await query(
+      'DELETE FROM activity_likes WHERE activity_id = $1 AND user_id = $2',
+      [this.id, userId]
+    );
+  }
+
+  // Get like count
+  async getLikeCount() {
+    const result = await query(
+      'SELECT COUNT(*) as count FROM activity_likes WHERE activity_id = $1',
+      [this.id]
+    );
+    return parseInt(result.rows[0].count);
+  }
+
+  // Check if user liked activity
+  async isLikedBy(userId) {
+    const result = await query(
+      'SELECT 1 FROM activity_likes WHERE activity_id = $1 AND user_id = $2',
+      [this.id, userId]
+    );
+    return result.rows.length > 0;
+  }
+
+  // Get comments for activity
+  async getComments() {
+    const result = await query(
+      `SELECT c.*, u.username, u.profile_pic,
+       (SELECT COUNT(*) FROM comment_likes cl WHERE cl.comment_id = c.id) as like_count
+       FROM comments c
+       JOIN users u ON c.user_id = u.id
+       WHERE c.activity_id = $1 AND c.is_deleted = false
+       ORDER BY c.created_at ASC`,
+      [this.id]
+    );
+    return result.rows;
+  }
+
+  // Convert camelCase to snake_case
+  camelToSnake(str) {
+    return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+  }
+
+  // Calculate average speed
+  get avgSpeed() {
+    if (this.duration === 0) return 0;
+    return (this.distance / 1000) / (this.duration / 3600);
+  }
+
+  // Convert to JSON with proper field names
+  toJSON() {
+    return {
+      ...this,
+      userId: this.user_id,
+      startTime: this.start_time,
+      endTime: this.end_time,
+      elevationGain: this.elevation_gain,
+      avgPace: this.avg_pace,
+      maxSpeed: this.max_speed,
+      isPublic: this.is_public,
+      heartRate: this.heart_rate ? JSON.parse(this.heart_rate) : null,
+      equipment: this.equipment ? JSON.parse(this.equipment) : null,
+      route: this.route ? JSON.parse(this.route) : null,
+      weather: this.weather ? JSON.parse(this.weather) : null,
+      createdAt: this.created_at,
+      updatedAt: this.updated_at,
+      likeCount: this.like_count || 0,
+      avgSpeed: this.avgSpeed
+    };
+  }
+}
+
+module.exports = Activity;
