@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MapPin, Clock, Zap, Trophy, Target, TrendingUp, Play } from 'lucide-react-native';
@@ -7,6 +7,13 @@ import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Spacing, BorderRadius } from '@/constants/Spacing';
 import { useTheme } from '@/contexts/ThemeContext';
+import {
+  Text as PaperText,
+  Card,
+  Surface,
+  ProgressBar,
+  IconButton
+} from 'react-native-paper';
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -32,13 +39,13 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={[styles.greeting, { color: theme.colors.secondary[500] }]}>Good morning,</Text>
-            <Text style={[styles.username, { color: theme.colors.text }]}>{user?.username || 'Athlete'}</Text>
+            <PaperText variant="bodyLarge" style={{ color: theme.colors.secondary[500] }}>Good morning,</PaperText>
+            <PaperText variant="headlineMedium" style={{ color: theme.colors.text }}>{user?.username || 'Athlete'}</PaperText>
           </View>
-          <TouchableOpacity style={[styles.streakContainer, { backgroundColor: theme.colors.accent[50] }]}> 
-            <Text style={[styles.streakNumber, { color: theme.colors.accent[500] }]}>7</Text>
-            <Text style={[styles.streakText, { color: theme.colors.accent[600] }]}>day streak</Text>
-          </TouchableOpacity>
+          <Surface style={[styles.streakContainer, { backgroundColor: theme.colors.accent[50] }]} elevation={1}> 
+            <PaperText variant="titleLarge" style={{ color: theme.colors.accent[500] }}>7</PaperText>
+            <PaperText variant="bodySmall" style={{ color: theme.colors.accent[600] }}>day streak</PaperText>
+          </Surface>
         </View>
 
         {/* Quick Action */}
@@ -54,55 +61,77 @@ export default function HomeScreen() {
             end={{ x: 1, y: 1 }}
           >
             <View style={styles.quickActionContent}>
-              <Text style={[styles.quickActionTitle, { color: theme.colors.text }]}>Ready to move?</Text>
-              <Text style={[styles.quickActionSubtitle, { color: theme.colors.text, opacity: 0.9 }]}>Start your workout</Text>
+              <PaperText variant="titleLarge" style={{ color: theme.colors.text }}>Ready to move?</PaperText>
+              <PaperText variant="bodyMedium" style={{ color: theme.colors.text, opacity: 0.9 }}>Start your workout</PaperText>
             </View>
             <View style={styles.playButton}>
-              <Play size={24} color={theme.colors.inverse} />
+              <Play size={24} color="white" />
             </View>
           </LinearGradient>
         </TouchableOpacity>
 
         {/* Quick Stats */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Your Stats</Text>
-          <View style={styles.statsGrid}>
-            {quickStats.map((stat, index) => (
-              <View key={index} style={[styles.statCard, { backgroundColor: theme.colors.card }]}> 
-                <stat.icon size={20} color={stat.color} />
-                <Text style={[styles.statValue, { color: theme.colors.text }]}>{stat.value}</Text>
-                <Text style={[styles.statLabel, { color: theme.colors.secondary[500] }]}>{stat.label}</Text>
-              </View>
-            ))}
+          <View style={styles.sectionHeader}>
+            <PaperText variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.text }]}>Your Stats</PaperText>
+          </View>
+          <View style={styles.statsContainer}>
+            <View style={styles.statsRow}>
+              {quickStats.slice(0, 2).map((stat, index) => (
+                <Card key={index} style={styles.statCardLarge} elevation={2}> 
+                  <Card.Content style={styles.statCardContentLarge}>
+                    <View style={styles.statIconContainer}>
+                      <stat.icon size={24} color={stat.color} />
+                    </View>
+                    <View style={styles.statTextContainer}>
+                      <PaperText variant="headlineSmall" style={[styles.statValueLarge, { color: theme.colors.text }]}>{stat.value}</PaperText>
+                      <PaperText variant="bodyMedium" style={[styles.statLabelLarge, { color: theme.colors.secondary[500] }]}>{stat.label}</PaperText>
+                    </View>
+                  </Card.Content>
+                </Card>
+              ))}
+            </View>
+            <View style={styles.statsRow}>
+              {quickStats.slice(2, 4).map((stat, index) => (
+                <Card key={index + 2} style={styles.statCardLarge} elevation={2}> 
+                  <Card.Content style={styles.statCardContentLarge}>
+                    <View style={styles.statIconContainer}>
+                      <stat.icon size={24} color={stat.color} />
+                    </View>
+                    <View style={styles.statTextContainer}>
+                      <PaperText variant="headlineSmall" style={[styles.statValueLarge, { color: theme.colors.text }]}>{stat.value}</PaperText>
+                      <PaperText variant="bodyMedium" style={[styles.statLabelLarge, { color: theme.colors.secondary[500] }]}>{stat.label}</PaperText>
+                    </View>
+                  </Card.Content>
+                </Card>
+              ))}
+            </View>
           </View>
         </View>
 
         {/* Weekly Goals */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Weekly Goals</Text>
-            <TouchableOpacity>
-              <Target size={20} color={theme.colors.primary[500]} />
-            </TouchableOpacity>
+            <PaperText variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.text }]}>Weekly Goals</PaperText>
+            <IconButton icon={() => <Target size={20} color={theme.colors.primary[500]} />} size={20} onPress={() => {}} />
           </View>
           <View style={styles.goalsContainer}>
             {weeklyGoals.map((goal, index) => (
-              <View key={index} style={[styles.goalCard, { backgroundColor: theme.colors.card }]}> 
-                <View style={styles.goalHeader}>
-                  <Text style={[styles.goalTitle, { color: theme.colors.text }]}>{goal.title}</Text>
-                  <Text style={[styles.goalProgress, { color: theme.colors.primary[500] }]}>
-                    {goal.current}/{goal.target} {goal.unit}
-                  </Text>
-                </View>
-                <View style={[styles.progressBar, { backgroundColor: theme.colors.neutral[200] }]}> 
-                  <View 
-                    style={[
-                      styles.progressFill, 
-                      { width: `${Math.min((goal.current / goal.target) * 100, 100)}%`, backgroundColor: theme.colors.primary[500] }
-                    ]} 
+              <Card key={index} style={styles.goalCard} elevation={2}> 
+                <Card.Content>
+                  <View style={styles.goalHeader}>
+                    <PaperText variant="bodyMedium" style={[styles.goalTitle, { color: theme.colors.text }]}>{goal.title}</PaperText>
+                    <PaperText variant="bodyMedium" style={[styles.goalProgress, { color: theme.colors.primary[500] }]}>
+                      {goal.current}/{goal.target} {goal.unit}
+                    </PaperText>
+                  </View>
+                  <ProgressBar 
+                    progress={Math.min(goal.current / goal.target, 1)} 
+                    color={theme.colors.primary[500]}
+                    style={styles.progressBar}
                   />
-                </View>
-              </View>
+                </Card.Content>
+              </Card>
             ))}
           </View>
         </View>
@@ -110,32 +139,38 @@ export default function HomeScreen() {
         {/* Recent Activity */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Recent Activity</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/feed')}>
-              <TrendingUp size={20} color={theme.colors.primary[500]} />
-            </TouchableOpacity>
+            <PaperText variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.text }]}>Recent Activity</PaperText>
+            <IconButton 
+              icon={() => <TrendingUp size={20} color={theme.colors.primary[500]} />} 
+              size={20} 
+              onPress={() => router.push('/(tabs)/feed')} 
+            />
           </View>
           <View style={styles.recentActivity}>
-            <View style={[styles.activityItem, { backgroundColor: theme.colors.card }]}> 
-              <View style={[styles.activityIcon, { backgroundColor: theme.colors.background }]}> 
-                <MapPin size={16} color={theme.colors.primary[500]} />
-              </View>
-              <View style={styles.activityInfo}>
-                <Text style={[styles.activityTitle, { color: theme.colors.text }]}>Morning Run</Text>
-                <Text style={[styles.activityDetails, { color: theme.colors.secondary[500] }]}>5.2km • 28:34 • Yesterday</Text>
-              </View>
-              <Text style={[styles.activityPace, { color: theme.colors.primary[500] }]}>5:29/km</Text>
-            </View>
-            <View style={[styles.activityItem, { backgroundColor: theme.colors.card }]}> 
-              <View style={[styles.activityIcon, { backgroundColor: theme.colors.background }]}> 
-                <Zap size={16} color={theme.colors.secondary[500]} />
-              </View>
-              <View style={styles.activityInfo}>
-                <Text style={[styles.activityTitle, { color: theme.colors.text }]}>Evening Cycle</Text>
-                <Text style={[styles.activityDetails, { color: theme.colors.secondary[500] }]}>15.8km • 45:12 • 2 days ago</Text>
-              </View>
-              <Text style={[styles.activityPace, { color: theme.colors.primary[500] }]}>21.2 km/h</Text>
-            </View>
+            <Card style={styles.activityCard} elevation={2}> 
+              <Card.Content style={styles.activityItem}>
+                <Surface style={[styles.activityIcon, { backgroundColor: theme.colors.background }]} elevation={1}> 
+                  <MapPin size={16} color={theme.colors.primary[500]} />
+                </Surface>
+                <View style={styles.activityInfo}>
+                  <PaperText variant="bodyMedium" style={[styles.activityTitle, { color: theme.colors.text }]}>Morning Run</PaperText>
+                  <PaperText variant="bodySmall" style={[styles.activityDetails, { color: theme.colors.secondary[500] }]}>5.2km • 28:34 • Yesterday</PaperText>
+                </View>
+                <PaperText variant="bodyMedium" style={[styles.activityPace, { color: theme.colors.primary[500] }]}>5:29/km</PaperText>
+              </Card.Content>
+            </Card>
+            <Card style={styles.activityCard} elevation={2}> 
+              <Card.Content style={styles.activityItem}>
+                <Surface style={[styles.activityIcon, { backgroundColor: theme.colors.background }]} elevation={1}> 
+                  <Zap size={16} color={theme.colors.secondary[500]} />
+                </Surface>
+                <View style={styles.activityInfo}>
+                  <PaperText variant="bodyMedium" style={[styles.activityTitle, { color: theme.colors.text }]}>Evening Cycle</PaperText>
+                  <PaperText variant="bodySmall" style={[styles.activityDetails, { color: theme.colors.secondary[500] }]}>15.8km • 45:12 • 2 days ago</PaperText>
+                </View>
+                <PaperText variant="bodyMedium" style={[styles.activityPace, { color: theme.colors.primary[500] }]}>21.2 km/h</PaperText>
+              </Card.Content>
+            </Card>
           </View>
         </View>
       </ScrollView>
@@ -226,26 +261,42 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Inter-SemiBold',
   },
-  statsGrid: {
-    flexDirection: 'row',
+  statsContainer: {
     paddingHorizontal: Spacing.lg,
-    gap: Spacing.sm,
+    gap: Spacing.md,
   },
-  statCard: {
+  statsRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  statCardLarge: {
     flex: 1,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
+  },
+  statCardContentLarge: {
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
   },
-  statValue: {
-    fontSize: 18,
+  statIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  statTextContainer: {
+    flex: 1,
+  },
+  statValueLarge: {
     fontFamily: 'Inter-Bold',
-    marginTop: Spacing.xs,
+    marginBottom: 2,
   },
-  statLabel: {
-    fontSize: 12,
-    fontFamily: 'Inter-Regular',
-    marginTop: 2,
+  statLabelLarge: {
+    fontFamily: 'Inter-Medium',
   },
   goalsContainer: {
     paddingHorizontal: Spacing.lg,
@@ -311,5 +362,11 @@ const styles = StyleSheet.create({
   activityPace: {
     fontSize: 14,
     fontFamily: 'Inter-SemiBold',
+  },
+  statCardContent: {
+    alignItems: 'center',
+  },
+  activityCard: {
+    marginBottom: Spacing.sm,
   },
 });
