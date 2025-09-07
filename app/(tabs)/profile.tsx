@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { Modal, Switch } from 'react-native';
+import { Switch } from 'react-native';
+import { 
+  Dialog, 
+  Portal, 
+  Button as PaperButton, 
+  Text as PaperText, 
+  Card, 
+  Avatar, 
+  Surface, 
+  Divider,
+  Modal as PaperModal,
+  Switch as PaperSwitch
+} from 'react-native-paper';
 import { useTheme } from '@/contexts/ThemeContext';
 import * as NavigationBar from 'expo-navigation-bar';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
@@ -7,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Settings, CreditCard as Edit3, MapPin, Clock, Zap, Trophy, Users, Calendar } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/Button';
+// import { Button } from '@/components/Button'; // Replaced with Paper Button
 import { Spacing, BorderRadius } from '@/constants/Spacing';
 import { locationUtils } from '@/utils/locationUtils';
 
@@ -15,10 +27,20 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [logoutDialogVisible, setLogoutDialogVisible] = useState(false);
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
+    setLogoutDialogVisible(true);
+  };
+
+  const confirmLogout = async () => {
+    setLogoutDialogVisible(false);
     await logout();
     router.replace('/(auth)/welcome');
+  };
+
+  const cancelLogout = () => {
+    setLogoutDialogVisible(false);
   };
 
   const stats = [
@@ -87,14 +109,16 @@ export default function ProfileScreen() {
 
         {/* Stats */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Your Stats</Text>
+          <PaperText variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.text }]}>Your Stats</PaperText>
           <View style={styles.statsGrid}>
             {stats.map((stat, index) => (
-              <View key={index} style={[styles.statCard, { backgroundColor: theme.colors.card }]}> 
-                <stat.icon size={20} color={stat.color} />
-                <Text style={[styles.statValue, { color: theme.colors.text }]}>{stat.value}</Text>
-                <Text style={[styles.statLabel, { color: theme.colors.text }]}>{stat.label}</Text>
-              </View>
+              <Card key={index} style={[styles.statCard, { flex: 1, minWidth: '47%', margin: 4 }]}>
+                <Card.Content style={{ alignItems: 'center', padding: 16 }}>
+                  <stat.icon size={20} color={stat.color} />
+                  <PaperText variant="titleMedium" style={[styles.statValue, { color: theme.colors.text, marginTop: 8 }]}>{stat.value}</PaperText>
+                  <PaperText variant="bodySmall" style={[styles.statLabel, { color: theme.colors.text, marginTop: 2, textAlign: 'center' }]}>{stat.label}</PaperText>
+                </Card.Content>
+              </Card>
             ))}
           </View>
         </View>
@@ -102,124 +126,162 @@ export default function ProfileScreen() {
         {/* Recent Activities */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Recent Activities</Text>
+            <PaperText variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.text }]}>Recent Activities</PaperText>
             <TouchableOpacity>
-              <Text style={[styles.seeAll, { color: theme.colors.primary[500] }]}>See All</Text>
+              <PaperText variant="bodyMedium" style={[styles.seeAll, { color: theme.colors.primary[500] }]}>See All</PaperText>
             </TouchableOpacity>
           </View>
           <View style={styles.activitiesContainer}>
-            <View style={[styles.activityItem, { backgroundColor: theme.colors.card }]}> 
-              <View style={[styles.activityIcon, { backgroundColor: theme.colors.background }]}> 
-                <MapPin size={16} color={theme.colors.primary[500]} />
-              </View>
-              <View style={styles.activityInfo}>
-                <Text style={[styles.activityTitle, { color: theme.colors.text }]}>Morning Run</Text>
-                <Text style={[styles.activityDetails, { color: theme.colors.text }]}>
-                  5.2km • 28:34 • Yesterday
-                </Text>
-              </View>
-              <Text style={[styles.activityPace, { color: theme.colors.primary[500] }]}>5:29/km</Text>
-            </View>
-            <View style={[styles.activityItem, { backgroundColor: theme.colors.card }]}> 
-              <View style={[styles.activityIcon, { backgroundColor: theme.colors.background }]}> 
-                <Zap size={16} color={theme.colors.secondary[500]} />
-              </View>
-              <View style={styles.activityInfo}>
-                <Text style={[styles.activityTitle, { color: theme.colors.text }]}>Evening Cycle</Text>
-                <Text style={[styles.activityDetails, { color: theme.colors.text }]}>
-                  15.8km • 45:12 • 2 days ago
-                </Text>
-              </View>
-              <Text style={[styles.activityPace, { color: theme.colors.secondary[500] }]}>21.2 km/h</Text>
-            </View>
-            <View style={[styles.activityItem, { backgroundColor: theme.colors.card }]}> 
-              <View style={[styles.activityIcon, { backgroundColor: theme.colors.background }]}> 
-                <Calendar size={16} color={theme.colors.accent[500]} />
-              </View>
-              <View style={styles.activityInfo}>
-                <Text style={[styles.activityTitle, { color: theme.colors.text }]}>Weekend Hike</Text>
-                <Text style={[styles.activityDetails, { color: theme.colors.text }]}>
-                  8.1km • 2:15:30 • 3 days ago
-                </Text>
-              </View>
-              <Text style={[styles.activityPace, { color: theme.colors.accent[500] }]}>16:41/km</Text>
-            </View>
+            <Card style={{ marginBottom: 8 }}>
+              <Card.Content style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                <Surface style={[styles.activityIcon, { backgroundColor: theme.colors.background }]}> 
+                  <MapPin size={16} color={theme.colors.primary[500]} />
+                </Surface>
+                <View style={styles.activityInfo}>
+                  <PaperText variant="titleSmall" style={{ color: theme.colors.text }}>Morning Run</PaperText>
+                  <PaperText variant="bodySmall" style={{ color: theme.colors.text, marginTop: 2 }}>
+                    5.2km • 28:34 • Yesterday
+                  </PaperText>
+                </View>
+                <PaperText variant="titleSmall" style={{ color: theme.colors.primary[500] }}>5:29/km</PaperText>
+              </Card.Content>
+            </Card>
+            <Card style={{ marginBottom: 8 }}>
+              <Card.Content style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                <Surface style={[styles.activityIcon, { backgroundColor: theme.colors.background }]}> 
+                  <Zap size={16} color={theme.colors.secondary[500]} />
+                </Surface>
+                <View style={styles.activityInfo}>
+                  <PaperText variant="titleSmall" style={{ color: theme.colors.text }}>Evening Cycle</PaperText>
+                  <PaperText variant="bodySmall" style={{ color: theme.colors.text, marginTop: 2 }}>
+                    15.8km • 45:12 • 2 days ago
+                  </PaperText>
+                </View>
+                <PaperText variant="titleSmall" style={{ color: theme.colors.secondary[500] }}>21.2 km/h</PaperText>
+              </Card.Content>
+            </Card>
+            <Card style={{ marginBottom: 8 }}>
+              <Card.Content style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+                <Surface style={[styles.activityIcon, { backgroundColor: theme.colors.background }]}> 
+                  <Calendar size={16} color={theme.colors.accent[500]} />
+                </Surface>
+                <View style={styles.activityInfo}>
+                  <PaperText variant="titleSmall" style={{ color: theme.colors.text }}>Weekend Hike</PaperText>
+                  <PaperText variant="bodySmall" style={{ color: theme.colors.text, marginTop: 2 }}>
+                    8.1km • 2:15:30 • 3 days ago
+                  </PaperText>
+                </View>
+                <PaperText variant="titleSmall" style={{ color: theme.colors.accent[500] }}>16:41/km</PaperText>
+              </Card.Content>
+            </Card>
           </View>
         </View>
 
         {/* Achievements */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Achievements</Text>
+          <PaperText variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.text }]}>Achievements</PaperText>
           <View style={styles.achievementsGrid}>
             {achievements.map((achievement, index) => (
-              <View 
+              <Card 
                 key={index} 
                 style={[
                   styles.achievementCard,
-                  { backgroundColor: theme.colors.card },
-                  !achievement.earned && styles.achievementCardLocked
+                  { flex: 1, minWidth: '47%', margin: 4 },
+                  !achievement.earned && { opacity: 0.5 }
                 ]}
               >
-                <Text style={styles.achievementIcon}>{achievement.icon}</Text>
-                <Text style={[
-                  styles.achievementTitle,
-                  { color: theme.colors.text },
-                  !achievement.earned && styles.achievementTitleLocked
-                ]}>
-                  {achievement.title}
-                </Text>
-                <Text style={[
-                  styles.achievementDescription,
-                  { color: theme.colors.text },
-                  !achievement.earned && styles.achievementDescriptionLocked
-                ]}>
-                  {achievement.description}
-                </Text>
-              </View>
+                <Card.Content style={{ alignItems: 'center', padding: 16 }}>
+                  <PaperText style={styles.achievementIcon}>{achievement.icon}</PaperText>
+                  <PaperText variant="titleSmall" style={[
+                    styles.achievementTitle,
+                    { color: theme.colors.text, textAlign: 'center', marginBottom: 4 }
+                  ]}>
+                    {achievement.title}
+                  </PaperText>
+                  <PaperText variant="bodySmall" style={[
+                    styles.achievementDescription,
+                    { color: theme.colors.text, textAlign: 'center' }
+                  ]}>
+                    {achievement.description}
+                  </PaperText>
+                </Card.Content>
+              </Card>
             ))}
           </View>
         </View>
 
         {/* Actions */}
         <View style={styles.section}>
-          <Button
-            title="Edit Profile"
+          <PaperButton
+            mode="outlined"
             onPress={() => {}}
-            variant="outline"
             style={styles.actionButton}
-          />
-          <Button
-            title="Sign Out"
+          >
+            Edit Profile
+          </PaperButton>
+          <PaperButton
+            mode="outlined"
             onPress={handleLogout}
-            variant="outline"
             style={styles.actionButton}
-            textStyle={{ color: theme.colors.error[500] }}
-          />
+            textColor={theme.colors.error[500]}
+          >
+            Sign Out
+          </PaperButton>
         </View>
       </ScrollView>
-      <Modal
-        visible={settingsVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setSettingsVisible(false)}
-      >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.modalBackdrop }}>
-          <View style={{ backgroundColor: theme.colors.modal, padding: 32, borderRadius: 24, alignItems: 'center', width: 320, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 16, elevation: 8 }}>
-            <Text style={{ fontSize: 20, fontWeight: 'bold', color: theme.colors.text, marginBottom: 16 }}>Theme</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
-              <Text style={{ marginRight: 8, color: theme.colors.text }}>Light</Text>
-              <Switch
-                value={theme.mode === 'dark'}
-                onValueChange={toggleTheme}
-                thumbColor={theme.mode === 'dark' ? theme.colors.primary[500] : theme.colors.neutral[400]}
-                trackColor={{ false: theme.colors.neutral[300], true: theme.colors.primary[300] }}
-              />
-              <Text style={{ marginLeft: 8, color: theme.colors.text }}>Dark</Text>
-            </View>
-            <Button title="Close" onPress={() => setSettingsVisible(false)} style={{ marginTop: 8, width: 120 }} />
+      <Portal>
+        <PaperModal
+          visible={settingsVisible}
+          onDismiss={() => setSettingsVisible(false)}
+          contentContainerStyle={{
+            backgroundColor: theme.colors.modal,
+            padding: 32,
+            borderRadius: 24,
+            alignItems: 'center',
+            width: 320,
+            alignSelf: 'center',
+            shadowColor: '#000',
+            shadowOpacity: 0.2,
+            shadowRadius: 16,
+            elevation: 8
+          }}
+        >
+          <PaperText variant="headlineSmall" style={{ color: theme.colors.text, marginBottom: 16 }}>
+            Theme
+          </PaperText>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
+            <PaperText style={{ marginRight: 8, color: theme.colors.text }}>Light</PaperText>
+            <PaperSwitch
+              value={theme.mode === 'dark'}
+              onValueChange={toggleTheme}
+            />
+            <PaperText style={{ marginLeft: 8, color: theme.colors.text }}>Dark</PaperText>
           </View>
-        </View>
-      </Modal>
+          <PaperButton onPress={() => setSettingsVisible(false)} style={{ marginTop: 8, width: 120 }}>
+            Close
+          </PaperButton>
+        </PaperModal>
+      </Portal>
+      
+      <Portal>
+        <Dialog visible={logoutDialogVisible} onDismiss={cancelLogout}>
+          <Dialog.Title>Sign Out</Dialog.Title>
+          <Dialog.Content>
+            <PaperText variant="bodyMedium">
+              Are you sure you want to sign out of your account?
+            </PaperText>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <PaperButton onPress={cancelLogout}>Cancel</PaperButton>
+            <PaperButton 
+              onPress={confirmLogout}
+              textColor={theme.colors.error[500]}
+            >
+              Sign Out
+            </PaperButton>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </SafeAreaView>
   );
 }
