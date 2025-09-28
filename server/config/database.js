@@ -2,19 +2,28 @@ const { Pool } = require('pg');
 const { createClient } = require('@supabase/supabase-js');
 
 // PostgreSQL connection pool
+const isSupabaseDb =
+  typeof process.env.DATABASE_URL === 'string' &&
+  process.env.DATABASE_URL.includes('.supabase.co');
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  // Supabase Postgres requires SSL; allow self-signed certs
+  ssl: isSupabaseDb ? { rejectUnauthorized: false } : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 5000,
 });
 
 // Supabase client for additional features (auth, storage, etc.)
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+let supabase = null;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+} else {
+  console.warn('⚠️  Supabase env vars missing: SUPABASE_URL and/or SUPABASE_ANON_KEY. Skipping Supabase client initialization.');
+}
 
 // Test database connection
 const testConnection = async () => {

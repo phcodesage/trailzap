@@ -1,10 +1,12 @@
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const { testConnection } = require('./config/database');
-require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -49,18 +51,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// PostgreSQL connection test
-testConnection()
-.then((connected) => {
-  if (!connected) {
-    console.error('❌ Failed to connect to PostgreSQL database');
-    process.exit(1);
-  }
-})
-.catch((error) => {
-  console.error('❌ Database connection error:', error);
-  process.exit(1);
-});
+// PostgreSQL connection test (optional)
+if (process.env.DATABASE_URL) {
+  testConnection()
+    .then((connected) => {
+      if (!connected) {
+        console.error('❌ Failed to connect to PostgreSQL database');
+        console.warn('⚠️  Continuing to run server without PostgreSQL. Set DATABASE_URL correctly if you need DB access.');
+      }
+    })
+    .catch((error) => {
+      console.error('❌ Database connection error:', error);
+      console.warn('⚠️  Continuing to run server without PostgreSQL. Set DATABASE_URL correctly if you need DB access.');
+    });
+} else {
+  console.warn('⚠️  DATABASE_URL not set. Skipping PostgreSQL connection test.');
+}
 
 // Routes
 app.use('/api/auth', authRoutes);
