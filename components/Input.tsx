@@ -1,7 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { View, TextInput, Text, StyleSheet, TextInputProps, TouchableOpacity } from 'react-native';
-import { Colors } from '@/constants/Colors';
+import {
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
+  TextInputProps,
+  TouchableOpacity,
+} from 'react-native';
 import { Spacing, BorderRadius } from '@/constants/Spacing';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -9,7 +16,16 @@ interface InputProps extends TextInputProps {
   helperText?: string;
 }
 
-export function Input({ label, error, helperText, style, secureTextEntry, ...props }: InputProps) {
+export function Input({
+  label,
+  error,
+  helperText,
+  style,
+  secureTextEntry,
+  ...props
+}: InputProps) {
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [isFocused, setIsFocused] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -17,34 +33,47 @@ export function Input({ label, error, helperText, style, secureTextEntry, ...pro
 
   return (
     <View style={styles.container}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, { color: c.text }]}>{label}</Text>}
       <View style={styles.inputWrapper}>
         <TextInput
           style={[
             styles.input,
-            isFocused && styles.inputFocused,
-            error && styles.inputError,
+            {
+              borderColor: c.border.medium,
+              color: c.text,
+              backgroundColor: c.card,
+            },
+            isFocused && { borderColor: c.primary[500], borderWidth: 2 },
+            error && { borderColor: c.error[500] },
             style,
           ]}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholderTextColor={Colors.neutral[400]}
+          placeholderTextColor={c.neutral[400]}
           secureTextEntry={shouldShowToggle ? !isPasswordVisible : undefined}
           {...props}
         />
         {shouldShowToggle && (
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel={isPasswordVisible ? 'Hide password' : 'Show password'}
+            accessibilityLabel={
+              isPasswordVisible ? 'Hide password' : 'Show password'
+            }
             onPress={() => setIsPasswordVisible((v) => !v)}
             style={styles.toggleBtn}
           >
-            <Text style={styles.toggleText}>{isPasswordVisible ? 'Hide' : 'Show'}</Text>
+            <Text style={[styles.toggleText, { color: c.primary[500] }]}>
+              {isPasswordVisible ? 'Hide' : 'Show'}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      {helperText && !error && <Text style={styles.helperText}>{helperText}</Text>}
+      {error && (
+        <Text style={[styles.errorText, { color: c.error[500] }]}>{error}</Text>
+      )}
+      {helperText && !error && (
+        <Text style={[styles.helperText, { color: c.text }]}>{helperText}</Text>
+      )}
     </View>
   );
 }
@@ -54,9 +83,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Inter-Medium',
-    color: Colors.text.primary,
     marginBottom: Spacing.xs,
   },
   inputWrapper: {
@@ -64,15 +92,12 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: Colors.border.light,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     fontSize: 16,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.primary,
-    backgroundColor: Colors.background.primary,
-    minHeight: 44,
+    minHeight: 46,
   },
   toggleBtn: {
     position: 'absolute',
@@ -82,27 +107,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   toggleText: {
-    color: Colors.primary[500],
     fontFamily: 'Inter-Medium',
     fontSize: 14,
   },
-  inputFocused: {
-    borderColor: Colors.primary[500],
-    borderWidth: 2,
-  },
-  inputError: {
-    borderColor: Colors.error[500],
-  },
   errorText: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: 'Inter-Regular',
-    color: Colors.error[500],
     marginTop: Spacing.xs,
   },
   helperText: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.secondary,
     marginTop: Spacing.xs,
   },
 });

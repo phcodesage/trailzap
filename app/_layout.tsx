@@ -13,11 +13,39 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AuthProvider } from '@/contexts/AuthContext';
 import * as NavigationBar from 'expo-navigation-bar';
-import { Appearance } from 'react-native';
-import { Colors } from '@/constants/Colors';
-import { ThemeProvider } from '@/contexts/ThemeContext';
+import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
+import { lightPaperTheme, darkPaperTheme } from '@/constants/paperTheme';
 
 SplashScreen.preventAutoHideAsync();
+
+// Inner app: reads the active theme so Paper, the status bar, and the Android
+// navigation bar all follow the user's light/dark preference.
+function ThemedApp() {
+  const { theme } = useTheme();
+  const isDark = theme.mode === 'dark';
+  const paperTheme = isDark ? darkPaperTheme : lightPaperTheme;
+
+  useEffect(() => {
+    NavigationBar.setButtonStyleAsync(isDark ? 'light' : 'dark');
+  }, [isDark]);
+
+  return (
+    <PaperProvider theme={paperTheme}>
+      <AuthProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar
+          style={isDark ? 'light' : 'dark'}
+          backgroundColor="transparent"
+          translucent
+        />
+      </AuthProvider>
+    </PaperProvider>
+  );
+}
 
 export default function RootLayout() {
   useFrameworkReady();
@@ -35,36 +63,13 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError]);
 
-  useEffect(() => {
-    const setNavBar = () => {
-      const colorScheme = Appearance.getColorScheme();
-      if (colorScheme === 'dark') {
-        NavigationBar.setButtonStyleAsync('light');
-      } else {
-        NavigationBar.setButtonStyleAsync('dark');
-      }
-    };
-    setNavBar();
-    const listener = Appearance.addChangeListener(setNavBar);
-    return () => listener.remove();
-  }, []);
-
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
-    <PaperProvider>
-      <ThemeProvider>
-        <AuthProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="dark" backgroundColor="transparent" translucent />
-        </AuthProvider>
-      </ThemeProvider>
-    </PaperProvider>
+    <ThemeProvider>
+      <ThemedApp />
+    </ThemeProvider>
   );
 }

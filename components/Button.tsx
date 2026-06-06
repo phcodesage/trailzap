@@ -1,7 +1,13 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
-import { Colors } from '@/constants/Colors';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
 import { Spacing, BorderRadius } from '@/constants/Spacing';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ButtonProps {
   title: string;
@@ -22,19 +28,37 @@ export function Button({
   style,
   textStyle,
 }: ButtonProps) {
+  const { theme } = useTheme();
+  const c = theme.colors;
+
+  const variantStyle: ViewStyle =
+    variant === 'primary'
+      ? { backgroundColor: c.primary[500] }
+      : variant === 'secondary'
+        ? { backgroundColor: c.secondary[500] }
+        : {
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderColor: c.primary[500],
+          };
+
+  const variantTextColor = variant === 'outline' ? c.primary[500] : '#FFFFFF';
+
   const buttonStyle = [
     styles.base,
-    styles[variant],
+    variantStyle,
     styles[size],
-    disabled && styles.disabled,
+    disabled && {
+      backgroundColor: c.neutral[300],
+      borderColor: c.neutral[300],
+    },
     style,
   ];
 
   const titleStyle = [
     styles.baseText,
-    styles[`${variant}Text`],
     styles[`${size}Text`],
-    disabled && styles.disabledText,
+    { color: disabled ? c.neutral[500] : variantTextColor },
     textStyle,
   ];
 
@@ -43,7 +67,7 @@ export function Button({
       style={buttonStyle}
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.8}
+      activeOpacity={0.85}
     >
       <Text style={titleStyle}>{title}</Text>
     </TouchableOpacity>
@@ -56,20 +80,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
-  // Variants
-  primary: {
-    backgroundColor: Colors.primary[500],
-  },
-  secondary: {
-    backgroundColor: Colors.secondary[500],
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: Colors.primary[500],
-  },
-  
+
   // Sizes
   small: {
     paddingVertical: Spacing.xs,
@@ -86,29 +97,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     minHeight: 52,
   },
-  
-  // Disabled state
-  disabled: {
-    backgroundColor: Colors.neutral[300],
-    borderColor: Colors.neutral[300],
-  },
-  
-  // Text styles
+
+  // Text
   baseText: {
     fontFamily: 'Inter-SemiBold',
     textAlign: 'center',
   },
-  primaryText: {
-    color: Colors.text.inverse,
-  },
-  secondaryText: {
-    color: Colors.text.inverse,
-  },
-  outlineText: {
-    color: Colors.primary[500],
-  },
-  
-  // Text sizes
   smallText: {
     fontSize: 14,
   },
@@ -117,9 +111,5 @@ const styles = StyleSheet.create({
   },
   largeText: {
     fontSize: 18,
-  },
-  
-  disabledText: {
-    color: Colors.neutral[500],
   },
 });

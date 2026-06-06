@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { MapPin, Clock, Zap, Trophy, Target, TrendingUp, Play } from 'lucide-react-native';
+import { MapPin, Clock, Zap, Trophy, Target, TrendingUp, Play, LucideIcon } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Spacing, BorderRadius } from '@/constants/Spacing';
@@ -14,6 +14,88 @@ import {
   ProgressBar,
   IconButton
 } from 'react-native-paper';
+
+interface StatCardProps {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  color: string;
+  index: number;
+}
+
+const StatCard = React.memo(({ icon: Icon, label, value, color }: StatCardProps) => {
+  const { theme } = useTheme();
+
+  return (
+    <Card style={[styles.statCard, { backgroundColor: theme.colors.card }]} elevation={2}>
+      <Card.Content style={styles.statCardContent}>
+        <View style={[styles.statIconContainer, { backgroundColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
+          <Icon size={20} color={color} />
+        </View>
+        <PaperText variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{value}</PaperText>
+        <PaperText variant="bodyMedium" style={[styles.statLabel, { color: theme.colors.secondary[500] }]}>{label}</PaperText>
+      </Card.Content>
+    </Card>
+  );
+});
+
+interface GoalCardProps {
+  title: string;
+  current: number;
+  target: number;
+  unit: string;
+  index: number;
+}
+
+const GoalCard = React.memo(({ title, current, target, unit }: GoalCardProps) => {
+  const { theme } = useTheme();
+
+  return (
+    <Card style={[styles.goalCard, { backgroundColor: theme.colors.card }]} elevation={2}>
+      <Card.Content>
+        <View style={styles.goalHeader}>
+          <PaperText variant="bodyMedium" style={[styles.goalTitle, { color: theme.colors.text }]}>{title}</PaperText>
+          <PaperText variant="bodyMedium" style={[styles.goalProgress, { color: theme.colors.primary[500] }]}>
+            {current}/{target} {unit}
+          </PaperText>
+        </View>
+        <ProgressBar
+          progress={Math.min(current / target, 1)}
+          color={theme.colors.primary[500]}
+          style={[styles.progressBar, { backgroundColor: theme.mode === 'dark' ? theme.colors.neutral[700] : theme.colors.neutral[200] }]}
+        />
+      </Card.Content>
+    </Card>
+  );
+});
+
+interface RecentActivityItemProps {
+  title: string;
+  details: string;
+  pace: string;
+  icon: LucideIcon;
+  color: string;
+  index: number;
+}
+
+const RecentActivityItem = React.memo(({ title, details, pace, icon: Icon, color }: RecentActivityItemProps) => {
+  const { theme } = useTheme();
+
+  return (
+    <Card style={[styles.activityCard, { backgroundColor: theme.colors.card }]} elevation={2}>
+      <Card.Content style={styles.activityItem}>
+        <Surface style={[styles.activityIcon, { backgroundColor: theme.mode === 'dark' ? `${color}20` : `${color}20` }]} elevation={1}>
+          <Icon size={16} color={color} />
+        </Surface>
+        <View style={styles.activityInfo}>
+          <PaperText variant="bodyMedium" style={[styles.activityTitle, { color: theme.colors.text }]}>{title}</PaperText>
+          <PaperText variant="bodySmall" style={[styles.activityDetails, { color: theme.colors.secondary[500] }]}>{details}</PaperText>
+        </View>
+        <PaperText variant="bodyMedium" style={[styles.activityPace, { color: theme.colors.primary[500] }]}>{pace}</PaperText>
+      </Card.Content>
+    </Card>
+  );
+});
 
 export default function HomeScreen() {
   const { user } = useAuth();
@@ -77,15 +159,14 @@ export default function HomeScreen() {
           </View>
           <View style={styles.statsGrid}>
             {quickStats.map((stat, index) => (
-              <Card key={index} style={[styles.statCard, { backgroundColor: theme.colors.card }]} elevation={2}> 
-                <Card.Content style={styles.statCardContent}>
-                  <View style={[styles.statIconContainer, { backgroundColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
-                    <stat.icon size={20} color={stat.color} />
-                  </View>
-                  <PaperText variant="headlineMedium" style={[styles.statValue, { color: theme.colors.text }]}>{stat.value}</PaperText>
-                  <PaperText variant="bodyMedium" style={[styles.statLabel, { color: theme.colors.secondary[500] }]}>{stat.label}</PaperText>
-                </Card.Content>
-              </Card>
+              <StatCard
+                key={index}
+                icon={stat.icon}
+                label={stat.label}
+                value={stat.value}
+                color={stat.color}
+                index={index}
+              />
             ))}
           </View>
         </View>
@@ -98,21 +179,14 @@ export default function HomeScreen() {
           </View>
           <View style={styles.goalsContainer}>
             {weeklyGoals.map((goal, index) => (
-              <Card key={index} style={[styles.goalCard, { backgroundColor: theme.colors.card }]} elevation={2}> 
-                <Card.Content>
-                  <View style={styles.goalHeader}>
-                    <PaperText variant="bodyMedium" style={[styles.goalTitle, { color: theme.colors.text }]}>{goal.title}</PaperText>
-                    <PaperText variant="bodyMedium" style={[styles.goalProgress, { color: theme.colors.primary[500] }]}>
-                      {goal.current}/{goal.target} {goal.unit}
-                    </PaperText>
-                  </View>
-                  <ProgressBar 
-                    progress={Math.min(goal.current / goal.target, 1)} 
-                    color={theme.colors.primary[500]}
-                    style={[styles.progressBar, { backgroundColor: theme.mode === 'dark' ? theme.colors.neutral[700] : theme.colors.neutral[200] }]}
-                  />
-                </Card.Content>
-              </Card>
+              <GoalCard
+                key={index}
+                title={goal.title}
+                current={goal.current}
+                target={goal.target}
+                unit={goal.unit}
+                index={index}
+              />
             ))}
           </View>
         </View>
@@ -128,30 +202,22 @@ export default function HomeScreen() {
             />
           </View>
           <View style={styles.recentActivity}>
-            <Card style={[styles.activityCard, { backgroundColor: theme.colors.card }]} elevation={2}> 
-              <Card.Content style={styles.activityItem}>
-                <Surface style={[styles.activityIcon, { backgroundColor: theme.mode === 'dark' ? theme.colors.primary[900] : theme.colors.primary[50] }]} elevation={1}> 
-                  <MapPin size={16} color={theme.colors.primary[500]} />
-                </Surface>
-                <View style={styles.activityInfo}>
-                  <PaperText variant="bodyMedium" style={[styles.activityTitle, { color: theme.colors.text }]}>Morning Run</PaperText>
-                  <PaperText variant="bodySmall" style={[styles.activityDetails, { color: theme.colors.secondary[500] }]}>5.2km • 28:34 • Yesterday</PaperText>
-                </View>
-                <PaperText variant="bodyMedium" style={[styles.activityPace, { color: theme.colors.primary[500] }]}>5:29/km</PaperText>
-              </Card.Content>
-            </Card>
-            <Card style={[styles.activityCard, { backgroundColor: theme.colors.card }]} elevation={2}> 
-              <Card.Content style={styles.activityItem}>
-                <Surface style={[styles.activityIcon, { backgroundColor: theme.mode === 'dark' ? theme.colors.secondary[900] : theme.colors.secondary[50] }]} elevation={1}> 
-                  <Zap size={16} color={theme.colors.secondary[500]} />
-                </Surface>
-                <View style={styles.activityInfo}>
-                  <PaperText variant="bodyMedium" style={[styles.activityTitle, { color: theme.colors.text }]}>Evening Cycle</PaperText>
-                  <PaperText variant="bodySmall" style={[styles.activityDetails, { color: theme.colors.secondary[500] }]}>15.8km • 45:12 • 2 days ago</PaperText>
-                </View>
-                <PaperText variant="bodyMedium" style={[styles.activityPace, { color: theme.colors.primary[500] }]}>21.2 km/h</PaperText>
-              </Card.Content>
-            </Card>
+            <RecentActivityItem
+              title="Morning Run"
+              details="5.2km • 28:34 • Yesterday"
+              pace="5:29/km"
+              icon={MapPin}
+              color={theme.colors.primary[500]}
+              index={0}
+            />
+            <RecentActivityItem
+              title="Evening Cycle"
+              details="15.8km • 45:12 • 2 days ago"
+              pace="21.2 km/h"
+              icon={Zap}
+              color={theme.colors.secondary[500]}
+              index={1}
+            />
           </View>
         </View>
       </ScrollView>

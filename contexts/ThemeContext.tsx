@@ -1,7 +1,15 @@
-import React, { createContext, useContext, useMemo, useState, ReactNode, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  ReactNode,
+  useEffect,
+} from 'react';
 import { Appearance, ColorSchemeName } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '@/constants/Colors';
+import { logger } from '@/utils/logger';
 
 type ThemeMode = 'light' | 'dark' | 'auto';
 
@@ -30,7 +38,7 @@ const darkTheme = {
     // Override primary colors for better dark mode contrast
     primary: {
       ...Colors.primary,
-      500: '#FF7A47', // Slightly brighter primary for dark mode
+      500: '#A78BFA', // Slightly brighter violet for dark mode
     },
     secondary: {
       ...Colors.secondary,
@@ -81,7 +89,9 @@ const THEME_STORAGE_KEY = '@trailzap_theme_mode';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [themeMode, setThemeModeState] = useState<ThemeMode>('auto');
-  const [systemColorScheme, setSystemColorScheme] = useState<ColorSchemeName>(Appearance.getColorScheme());
+  const [systemColorScheme, setSystemColorScheme] = useState<ColorSchemeName>(
+    Appearance.getColorScheme(),
+  );
 
   // Load saved theme preference on mount
   useEffect(() => {
@@ -92,7 +102,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           setThemeModeState(savedTheme as ThemeMode);
         }
       } catch (error) {
-        console.log('Failed to load theme preference:', error);
+        logger.warn('Failed to load theme preference', 'ThemeContext', error);
       }
     };
     loadThemePreference();
@@ -112,7 +122,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
       setThemeModeState(mode);
     } catch (error) {
-      console.log('Failed to save theme preference:', error);
+      logger.warn('Failed to save theme preference', 'ThemeContext', error);
       setThemeModeState(mode); // Still update state even if storage fails
     }
   };
@@ -131,14 +141,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setThemeMode(newMode);
   };
 
-  const value = useMemo(() => ({
-    theme: actualTheme,
-    themeMode,
-    setThemeMode,
-    toggleTheme,
-  }), [actualTheme, themeMode]);
+  const value = useMemo(
+    () => ({
+      theme: actualTheme,
+      themeMode,
+      setThemeMode,
+      toggleTheme,
+    }),
+    [actualTheme, themeMode],
+  );
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+  );
 }
 
 export function useTheme() {

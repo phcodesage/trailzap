@@ -1,18 +1,18 @@
 export const Colors = {
   // Primary colors
   primary: {
-    50: '#FFF4F0',
-    100: '#FFE4D6',
-    200: '#FFCAB0',
-    300: '#FFAB80',
-    400: '#FF8A4F',
-    500: '#FF6B35', // Main primary
-    600: '#E55A2B',
-    700: '#CC4A1F',
-    800: '#B33D16',
-    900: '#99330F',
+    50: '#F5F3FF',
+    100: '#EDE9FE',
+    200: '#DDD6FE',
+    300: '#C4B5FD',
+    400: '#A78BFA',
+    500: '#8B5CF6', // Main primary
+    600: '#7C3AED',
+    700: '#6D28D9',
+    800: '#5B21B6',
+    900: '#4C1D95',
   },
-  
+
   // Secondary colors
   secondary: {
     50: '#F0F7FF',
@@ -26,7 +26,7 @@ export const Colors = {
     800: '#1D5194',
     900: '#0F3C7A',
   },
-  
+
   // Accent colors
   accent: {
     50: '#F0FDF4',
@@ -40,7 +40,7 @@ export const Colors = {
     800: '#166534',
     900: '#14532D',
   },
-  
+
   // Success colors
   success: {
     50: '#F0FDF4',
@@ -54,7 +54,7 @@ export const Colors = {
     800: '#166534',
     900: '#14532D',
   },
-  
+
   // Warning colors
   warning: {
     50: '#FFFBEB',
@@ -68,7 +68,7 @@ export const Colors = {
     800: '#92400E',
     900: '#78350F',
   },
-  
+
   // Error colors
   error: {
     50: '#FEF2F2',
@@ -82,7 +82,7 @@ export const Colors = {
     800: '#991B1B',
     900: '#7F1D1D',
   },
-  
+
   // Neutral colors
   neutral: {
     50: '#FAFAFA',
@@ -96,7 +96,7 @@ export const Colors = {
     800: '#262626',
     900: '#171717',
   },
-  
+
   // Text colors
   text: {
     primary: '#171717',
@@ -104,7 +104,7 @@ export const Colors = {
     tertiary: '#A3A3A3',
     inverse: '#FFFFFF',
   },
-  
+
   // Background colors
   background: {
     primary: '#FFFFFF',
@@ -112,7 +112,7 @@ export const Colors = {
     tertiary: '#F5F5F5',
     dark: '#171717',
   },
-  
+
   // Border colors
   border: {
     light: '#E5E5E5',

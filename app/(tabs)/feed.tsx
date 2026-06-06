@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, Alert } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  Alert,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ActivityCard } from '@/components/ActivityCard';
 import { Activity } from '@/types/activity';
 import { Spacing } from '@/constants/Spacing';
-import { socialAPI, activityAPI } from '@/services/api';
+import { feedService } from '@/services/activities';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Text as PaperText } from 'react-native-paper';
+import { logger } from '@/utils/logger';
 
 export default function FeedScreen() {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -29,14 +38,14 @@ export default function FeedScreen() {
         setLoading(true);
       }
 
-      const response = await socialAPI.getFeed({ page: pageNum, limit: 20 });
-      
+      const response = await feedService.getFeed({ page: pageNum, limit: 20 });
+
       if (pageNum === 1 || refresh) {
         setActivities(response.activities);
       } else {
-        setActivities(prev => [...prev, ...response.activities]);
+        setActivities((prev) => [...prev, ...response.activities]);
       }
-      
+
       setHasNextPage(response.pagination?.hasNextPage || false);
       setPage(pageNum);
     } catch (error: any) {
@@ -60,20 +69,21 @@ export default function FeedScreen() {
 
   const handleLike = async (activityId: string) => {
     try {
-      const response = await socialAPI.likeActivity(activityId);
-      
-      setActivities(prevActivities =>
-        prevActivities.map(activity => {
+      const response = await feedService.likeActivity(activityId);
+      const currentUserId = user?.id ?? 'current-user-id';
+
+      setActivities((prevActivities) =>
+        prevActivities.map((activity) => {
           if (activity.id === activityId) {
             return {
               ...activity,
-              likes: response.isLiked 
-                ? [...activity.likes, 'current-user-id']
-                : activity.likes.filter(id => id !== 'current-user-id'),
+              likes: response.isLiked
+                ? [...activity.likes, currentUserId]
+                : activity.likes.filter((id) => id !== currentUserId),
             };
           }
           return activity;
-        })
+        }),
       );
     } catch (error: any) {
       console.error('Failed to like activity:', error);
@@ -83,12 +93,12 @@ export default function FeedScreen() {
 
   const handleComment = (activityId: string) => {
     // TODO: Navigate to activity detail screen with comment section
-    console.log('Comment on activity:', activityId);
+    logger.debug('Comment on activity:', 'FeedScreen', activityId);
   };
 
   const handleActivityPress = (activityId: string) => {
     // TODO: Navigate to activity detail screen
-    console.log('View activity details:', activityId);
+    logger.debug('View activity details:', 'FeedScreen', activityId);
   };
 
   const renderActivity = ({ item }: { item: Activity }) => (
@@ -105,15 +115,32 @@ export default function FeedScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}> 
-      <View style={[styles.header, { borderBottomColor: theme.colors.border.light }]}> 
-        <PaperText variant="headlineLarge" style={[styles.title, { color: theme.colors.text }]}>Activity Feed</PaperText>
-        <PaperText variant="bodyLarge" style={[styles.subtitle, { color: theme.colors.secondary[500] }]}>See what your friends are up to</PaperText>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
+      <View
+        style={[
+          styles.header,
+          { borderBottomColor: theme.colors.border.light },
+        ]}
+      >
+        <PaperText
+          variant="headlineLarge"
+          style={[styles.title, { color: theme.colors.text }]}
+        >
+          Activity Feed
+        </PaperText>
+        <PaperText
+          variant="bodyLarge"
+          style={[styles.subtitle, { color: theme.colors.secondary[500] }]}
+        >
+          See what your friends are up to
+        </PaperText>
       </View>
       <FlatList
         data={activities}
         renderItem={renderActivity}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -125,8 +152,21 @@ export default function FeedScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <PaperText variant="titleLarge" style={[styles.emptyTitle, { color: theme.colors.text }]}>No activities yet</PaperText>
-            <PaperText variant="bodyLarge" style={[styles.emptySubtitle, { color: theme.colors.secondary[500] }]}>Follow some athletes to see their activities here</PaperText>
+            <PaperText
+              variant="titleLarge"
+              style={[styles.emptyTitle, { color: theme.colors.text }]}
+            >
+              No activities yet
+            </PaperText>
+            <PaperText
+              variant="bodyLarge"
+              style={[
+                styles.emptySubtitle,
+                { color: theme.colors.secondary[500] },
+              ]}
+            >
+              Follow some athletes to see their activities here
+            </PaperText>
           </View>
         }
         onEndReached={handleLoadMore}

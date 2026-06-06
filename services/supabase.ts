@@ -1,10 +1,20 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, processLock } from '@supabase/supabase-js';
+import { logger } from '@/utils/logger';
+
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error(
+    'Missing Supabase environment variables. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_KEY in your .env file.'
+  );
+}
 
 export const supabase = createClient(
-  process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://rkmvynxikljottftfjzn.supabase.co',
-  process.env.EXPO_PUBLIC_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrbXZ5bnhpa2xqb3R0ZnRmanpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcyMzU4MzcsImV4cCI6MjA3MjgxMTgzN30.ZRb-HexYjQTqHVtlh4KneB92GCzXnUCSFu25DdeT0mg',
+  supabaseUrl,
+  supabaseKey,
   {
     auth: {
       storage: AsyncStorage,
@@ -19,7 +29,7 @@ export const supabase = createClient(
 // Test Supabase connection
 export const testSupabaseConnection = async () => {
   try {
-    console.log('🔍 Testing Supabase connection...');
+    logger.debug('Testing Supabase connection...', 'Supabase');
     
     // Simple query to test connection - this will work even without tables
     const { data, error } = await supabase
@@ -30,13 +40,13 @@ export const testSupabaseConnection = async () => {
     if (error) {
       // If table doesn't exist, that's actually good - it means connection works
       if (error.code === 'PGRST116' || error.message.includes('does not exist')) {
-        console.log('✅ Supabase connected successfully! (Tables not created yet)');
+        logger.info('Supabase connected successfully! (Tables not created yet)', 'Supabase');
         return { success: true, message: 'Connected - tables need to be created' };
       }
       throw error;
     }
     
-    console.log('✅ Supabase connected successfully!');
+    logger.info('Supabase connected successfully!', 'Supabase');
     return { success: true, message: 'Connected and tables exist' };
     
   } catch (error) {

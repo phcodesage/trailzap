@@ -28,14 +28,14 @@ export default function TabLayout() {
           backgroundColor: theme.colors.card,
           borderTopColor: theme.colors.border.light,
           borderTopWidth: 1,
-          paddingTop: 8,
-          paddingBottom: 8 + insets.bottom,
-          height: 88 + insets.bottom,
+          paddingTop: 6,
+          paddingBottom: 6 + insets.bottom,
+          height: 60 + insets.bottom,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontFamily: 'Inter-Medium',
-          marginTop: 4,
+          marginTop: 2,
         },
       }}
     >
@@ -43,18 +43,14 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ size, color }) => (
-            <Home size={size} color={color} />
-          ),
+          tabBarIcon: ({ size, color }) => <Home size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="track"
         options={{
           title: 'Track',
-          tabBarIcon: ({ size, color }) => (
-            <Play size={size} color={color} />
-          ),
+          tabBarIcon: ({ size, color }) => <Play size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -70,9 +66,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ size, color }) => (
-            <User size={size} color={color} />
-          ),
+          tabBarIcon: ({ size, color }) => <User size={size} color={color} />,
         }}
       />
     </Tabs>

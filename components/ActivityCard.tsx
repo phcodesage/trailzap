@@ -14,8 +14,16 @@ interface ActivityCardProps {
   onComment?: () => void;
 }
 
-export function ActivityCard({ activity, onPress, onLike, onComment }: ActivityCardProps) {
-  const { theme } = useTheme();
+function ActivityCardComponent({ activity, onPress, onLike, onComment }: ActivityCardProps) {
+
+interface ActivityCardProps {
+  activity: Activity;
+  onPress?: () => void;
+  onLike?: () => void;
+  onComment?: () => void;
+}
+
+const { theme } = useTheme();
   
   return (
     <Card style={styles.container} elevation={2}>
@@ -84,6 +92,17 @@ export function ActivityCard({ activity, onPress, onLike, onComment }: ActivityC
     </Card>
   );
 }
+
+export const ActivityCard = React.memo(ActivityCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.activity.id === nextProps.activity.id &&
+    prevProps.activity.likes.length === nextProps.activity.likes.length &&
+    prevProps.activity.comments.length === nextProps.activity.comments.length &&
+    prevProps.onPress === nextProps.onPress &&
+    prevProps.onLike === nextProps.onLike &&
+    prevProps.onComment === nextProps.onComment
+  );
+});
 
 const styles = StyleSheet.create({
   container: {

@@ -2,6 +2,8 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { AuthState, User, LoginCredentials, SignupCredentials } from '@/types/auth';
 import { authStorage } from '@/utils/authStorage';
 import { supabase } from '@/services/supabase';
+import { transformSupabaseUser } from '@/utils/userUtils';
+import { logger } from '@/utils/logger';
 
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<{ success: boolean; error?: string }>;
@@ -26,25 +28,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event);
+        logger.debug('Auth state changed:', 'AuthContext', event);
         
         if (session?.user) {
-          const user: User = {
-            id: session.user.id,
-            username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'user',
-            email: session.user.email || '',
-            bio: session.user.user_metadata?.bio || null,
-            location: session.user.user_metadata?.location || null,
-            isPrivate: session.user.user_metadata?.isPrivate || false,
-            createdAt: session.user.created_at,
-            updatedAt: session.user.updated_at || session.user.created_at,
-            followers: [],
-            following: [],
-            totalActivities: 0,
-            totalDistance: 0,
-            totalDuration: 0,
-            joinDate: session.user.created_at,
-          };
+          const user = transformSupabaseUser(session.user);
 
           setAuthState({
             user,
@@ -52,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isAuthenticated: true,
             isLoading: false,
           });
-          
+
           await authStorage.saveToken(session.access_token);
           await authStorage.saveUser(user);
         } else {
@@ -82,23 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (session?.user) {
-        // Convert Supabase user to our User type
-        const user: User = {
-          id: session.user.id,
-          username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'user',
-          email: session.user.email || '',
-          bio: session.user.user_metadata?.bio || null,
-          location: session.user.user_metadata?.location || null,
-          isPrivate: session.user.user_metadata?.isPrivate || false,
-          createdAt: session.user.created_at,
-          updatedAt: session.user.updated_at || session.user.created_at,
-          followers: [],
-          following: [],
-          totalActivities: 0,
-          totalDistance: 0,
-          totalDuration: 0,
-          joinDate: session.user.created_at,
-        };
+        const user = transformSupabaseUser(session.user);
 
         setAuthState({
           user,
@@ -106,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isAuthenticated: true,
           isLoading: false,
         });
-        
+
         // Save to local storage
         await authStorage.saveToken(session.access_token);
         await authStorage.saveUser(user);
@@ -155,23 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user && data.session) {
-        // Convert Supabase user to our User type
-        const user: User = {
-          id: data.user.id,
-          username: data.user.user_metadata?.username || data.user.email?.split('@')[0] || 'user',
-          email: data.user.email || '',
-          bio: data.user.user_metadata?.bio || null,
-          location: data.user.user_metadata?.location || null,
-          isPrivate: data.user.user_metadata?.isPrivate || false,
-          createdAt: data.user.created_at,
-          updatedAt: data.user.updated_at || data.user.created_at,
-          followers: [],
-          following: [],
-          totalActivities: 0,
-          totalDistance: 0,
-          totalDuration: 0,
-          joinDate: data.user.created_at,
-        };
+        const user = transformSupabaseUser(data.user);
 
         setAuthState({
           user,
@@ -179,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isAuthenticated: true,
           isLoading: false,
         });
-        
+
         // Save to local storage
         await authStorage.saveToken(data.session.access_token);
         await authStorage.saveUser(user);
@@ -271,7 +226,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { success: true };
         } else {
           // User needs to confirm email
-          console.log('Please check your email to confirm your account');
+          logger.info('Please check your email to confirm your account', 'AuthContext');
           return { success: true, error: 'Account created! Please check your email to confirm your account before signing in.' };
         }
       }

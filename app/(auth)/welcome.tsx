@@ -5,16 +5,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Button } from '@/components/Button';
 import { Colors } from '@/constants/Colors';
-import { Spacing, BorderRadius } from '@/constants/Spacing';
+import { Spacing } from '@/constants/Spacing';
 
 export default function WelcomeScreen() {
   return (
     <ImageBackground
-      source={{ uri: 'https://images.pexels.com/photos/416978/pexels-photo-416978.jpeg?auto=compress&cs=tinysrgb&w=800&h=1200&dpr=1' }}
+      source={{
+        uri: 'https://images.pexels.com/photos/416978/pexels-photo-416978.jpeg?auto=compress&cs=tinysrgb&w=800&h=1200&dpr=1',
+      }}
       style={styles.container}
     >
       <LinearGradient
-        colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.6)']}
+        // Violet brand wash fading into near-black for legible CTAs.
+        colors={['rgba(76,29,149,0.45)', 'rgba(24,20,37,0.92)']}
         style={styles.overlay}
       >
         <SafeAreaView style={styles.safeArea}>
@@ -23,19 +26,19 @@ export default function WelcomeScreen() {
               <Text style={styles.logo}>TrailZap</Text>
               <Text style={styles.tagline}>Track. Share. Conquer.</Text>
             </View>
-            
+
             <View style={styles.footer}>
               <Text style={styles.description}>
-                Join the community of athletes tracking their adventures and pushing their limits
+                Join the community of athletes tracking their adventures and
+                pushing their limits.
               </Text>
-              
+
               <View style={styles.buttonContainer}>
                 <Button
                   title="Get Started"
                   onPress={() => router.push('/(auth)/signup')}
                   variant="primary"
                   size="large"
-                  style={styles.primaryButton}
                 />
                 <Button
                   title="I already have an account"
@@ -67,7 +70,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
   },
   header: {
     flex: 1,
@@ -75,38 +78,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    fontSize: 48,
+    fontSize: 44,
     fontFamily: 'Inter-Bold',
     color: Colors.text.inverse,
     textAlign: 'center',
-    marginBottom: Spacing.sm,
+    letterSpacing: -0.5,
   },
   tagline: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Inter-Medium',
-    color: Colors.text.inverse,
+    color: Colors.primary[200],
     textAlign: 'center',
-    opacity: 0.9,
+    marginTop: Spacing.xs,
   },
   footer: {
     paddingBottom: Spacing.xl,
   },
   description: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.inverse,
+    color: 'rgba(255,255,255,0.9)',
     textAlign: 'center',
-    marginBottom: Spacing.xl,
-    opacity: 0.9,
+    marginBottom: Spacing.lg,
+    lineHeight: 22,
   },
   buttonContainer: {
-    gap: Spacing.md,
-  },
-  primaryButton: {
-    backgroundColor: Colors.primary[500],
+    gap: Spacing.sm,
   },
   secondaryButton: {
-    borderColor: Colors.text.inverse,
+    borderColor: 'rgba(255,255,255,0.7)',
     backgroundColor: 'transparent',
   },
   secondaryButtonText: {

@@ -1,19 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Input';
-import { Colors } from '@/constants/Colors';
-import { Spacing } from '@/constants/Spacing';
+import { Spacing, BorderRadius } from '@/constants/Spacing';
 
 export default function LoginScreen() {
   const { login } = useAuth();
+  const { theme } = useTheme();
+  const c = theme.colors;
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ identifier?: string; password?: string; auth?: string }>({});
+  const [errors, setErrors] = useState<{
+    identifier?: string;
+    password?: string;
+    auth?: string;
+  }>({});
 
   const validateForm = () => {
     const newErrors: { identifier?: string; password?: string } = {};
@@ -23,43 +29,54 @@ export default function LoginScreen() {
     } else if (!/\S+@\S+\.\S+/.test(value)) {
       newErrors.identifier = 'Please enter a valid email address';
     }
-    
+
     if (!password.trim()) {
       newErrors.password = 'Password is required';
     } else if (password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleLogin = async () => {
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
-    setErrors(prev => ({ ...prev, auth: undefined })); // Clear previous auth errors
-    
+    setErrors((prev) => ({ ...prev, auth: undefined }));
+
     try {
       const result = await login({ identifier: identifier.trim(), password });
       if (result.success) {
         router.replace('/(tabs)');
       } else {
-        setErrors(prev => ({ ...prev, auth: result.error }));
+        setErrors((prev) => ({ ...prev, auth: result.error }));
       }
     } catch (error) {
-      setErrors(prev => ({ ...prev, auth: 'An unexpected error occurred. Please try again.' }));
+      setErrors((prev) => ({
+        ...prev,
+        auth: 'An unexpected error occurred. Please try again.',
+      }));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to continue your fitness journey</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: c.background }]}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.brand}>
+          <View style={[styles.logoBadge, { backgroundColor: c.primary[500] }]}>
+            <Text style={styles.logoMark}>TZ</Text>
+          </View>
+          <Text style={[styles.title, { color: c.text }]}>Welcome back</Text>
+          <Text style={[styles.subtitle, { color: c.neutral[500] }]}>
+            Sign in to continue your fitness journey
+          </Text>
         </View>
 
         <View style={styles.form}>
@@ -73,7 +90,7 @@ export default function LoginScreen() {
             autoCorrect={false}
             error={errors.identifier}
           />
-          
+
           <Input
             label="Password"
             value={password}
@@ -82,26 +99,34 @@ export default function LoginScreen() {
             secureTextEntry
             error={errors.password}
           />
-          
+
           {errors.auth && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{errors.auth}</Text>
+            <View
+              style={[
+                styles.errorContainer,
+                { backgroundColor: c.error[50], borderColor: c.error[200] },
+              ]}
+            >
+              <Text style={[styles.errorText, { color: c.error[600] }]}>
+                {errors.auth}
+              </Text>
             </View>
           )}
 
           <Button
-            title={isLoading ? "Signing in..." : "Sign In"}
+            title={isLoading ? 'Signing in...' : 'Sign In'}
             onPress={handleLogin}
             disabled={isLoading}
-            style={styles.loginButton}
+            size="large"
+            style={styles.cta}
           />
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          <Text style={[styles.footerText, { color: c.neutral[500] }]}>
             Don't have an account?{' '}
             <Text
-              style={styles.link}
+              style={[styles.link, { color: c.primary[500] }]}
               onPress={() => router.push('/(auth)/signup')}
             >
               Sign up
@@ -116,58 +141,64 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background.primary,
   },
   content: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
   },
-  header: {
+  brand: {
     alignItems: 'center',
-    marginBottom: Spacing.xxxl,
+    marginBottom: Spacing.xl,
+  },
+  logoBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
+  },
+  logoMark: {
+    color: '#FFFFFF',
+    fontFamily: 'Inter-Bold',
+    fontSize: 22,
   },
   title: {
-    fontSize: 32,
+    fontSize: 26,
     fontFamily: 'Inter-Bold',
-    color: Colors.text.primary,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.secondary,
     textAlign: 'center',
   },
   form: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
-  loginButton: {
-    marginTop: Spacing.lg,
+  cta: {
+    marginTop: Spacing.sm,
   },
   footer: {
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Inter-Regular',
-    color: Colors.text.secondary,
   },
   link: {
-    color: Colors.primary[500],
     fontFamily: 'Inter-SemiBold',
   },
   errorContainer: {
-    marginTop: Spacing.sm,
+    marginBottom: Spacing.sm,
     padding: Spacing.sm,
-    backgroundColor: '#FEF2F2',
-    borderRadius: 8,
+    borderRadius: BorderRadius.sm,
     borderWidth: 1,
-    borderColor: '#FECACA',
   },
   errorText: {
-    color: '#DC2626',
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: 'Inter-Regular',
     textAlign: 'center',
   },
